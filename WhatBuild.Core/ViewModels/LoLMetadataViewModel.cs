@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 
 
-namespace WhatBuild.Core.ViewModels.LoL
+namespace WhatBuild.Core.ViewModels
 {
     public class LoLMetadataViewModel
     {

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using WhatBuild.Core.Helpers;
 using WhatBuild.Core.ViewModels;
-using WhatBuild.Core.ViewModels.LoL;
 using Xunit;
 
 namespace WhatBuild.Tests.Helpers
@@ -13,7 +12,7 @@ namespace WhatBuild.Tests.Helpers
         [Fact]
         public async Task FetchAPIMetadata_Version_ReturnsLatestVersion()
         {
-            LoLMetadataViewModel metadata = await LoLAPIUtil.FetchAPIMetadata();
+            LoLMetadataViewModel metadata = await LoLAPIUtil.FetchAPIMetadataAsync();
             string version = metadata.Version;
 
             Assert.NotNull(version);
@@ -23,7 +22,7 @@ namespace WhatBuild.Tests.Helpers
         [Fact]
         public async Task FetchAPIMetadata_BaseUrlAPI_ReturnsKnownUrl()
         {
-            LoLMetadataViewModel metadata = await LoLAPIUtil.FetchAPIMetadata();
+            LoLMetadataViewModel metadata = await LoLAPIUtil.FetchAPIMetadataAsync();
             string url = metadata.BaseUrlAPI;
 
             Assert.NotNull(url);
@@ -34,7 +33,7 @@ namespace WhatBuild.Tests.Helpers
         [Fact]
         public async Task FetchAllChampions_LoLChampionViewModel_ReturnsAllChampions()
         {
-            LoLMetadataViewModel metadata = await LoLAPIUtil.FetchAPIMetadata();
+            LoLMetadataViewModel metadata = await LoLAPIUtil.FetchAPIMetadataAsync();
 
             List<ChampionViewModel> champions = await LoLAPIUtil.FetchAllChampionsAsync(metadata.BaseUrlAPI, metadata.Version);
 
@@ -44,7 +43,7 @@ namespace WhatBuild.Tests.Helpers
         [Fact]
         public async Task FetchAllItemsIds_ItemId_ReturnsAllItemsWithValidIds()
         {
-            LoLMetadataViewModel metadata = await LoLAPIUtil.FetchAPIMetadata();
+            LoLMetadataViewModel metadata = await LoLAPIUtil.FetchAPIMetadataAsync();
 
             List<ItemViewModel> items = await LoLAPIUtil.FetchAllItemAsync(metadata.BaseUrlAPI, metadata.Version);
 

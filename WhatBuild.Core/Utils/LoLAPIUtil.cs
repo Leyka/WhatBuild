@@ -6,7 +6,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using WhatBuild.Core.ViewModels.LoL;
+using WhatBuild.Core.ViewModels;
 
 namespace WhatBuild.Core.Helpers
 {
@@ -15,7 +15,7 @@ namespace WhatBuild.Core.Helpers
         /// <summary>
         /// Returns League of Legends metadata such as version, CDN url, etc.
         /// </summary>
-        public static async Task<LoLMetadataViewModel> FetchAPIMetadata()
+        public static async Task<LoLMetadataViewModel> FetchAPIMetadataAsync()
         {
             using HttpClient client = new HttpClient();
 
@@ -37,6 +37,7 @@ namespace WhatBuild.Core.Helpers
             string formattedAPIUrl = $"{apiUrl}/{version}/data/en_US/{dataType}.json";
 
             using HttpClient client = new HttpClient();
+
             HttpResponseMessage response = await client.GetAsync(formattedAPIUrl);
             response.EnsureSuccessStatusCode();
             string responseBody = await response.Content.ReadAsStringAsync();
