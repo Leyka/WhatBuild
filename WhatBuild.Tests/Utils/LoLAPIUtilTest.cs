@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Threading.Tasks;
-using WhatBuild.Core.Helpers;
+using WhatBuild.Core.Utils;
 using WhatBuild.Core.ViewModels;
 using Xunit;
 
@@ -10,7 +11,7 @@ namespace WhatBuild.Tests.Helpers
     public class LoLAPIUtilTest
     {
         [Fact]
-        public async Task FetchAPIMetadata_Version_ReturnsLatestVersion()
+        public async Task FetchAPIMetadata_Version_NotEmpty()
         {
             LoLMetadataViewModel metadata = await LoLAPIUtil.FetchAPIMetadataAsync();
             string version = metadata.Version;
@@ -20,14 +21,27 @@ namespace WhatBuild.Tests.Helpers
         }
 
         [Fact]
-        public async Task FetchAPIMetadata_BaseUrlAPI_ReturnsKnownUrl()
+        public async Task FetchAPIMetadata_BaseUrlAPI_NotEmpty()
         {
             LoLMetadataViewModel metadata = await LoLAPIUtil.FetchAPIMetadataAsync();
             string url = metadata.BaseUrlAPI;
 
             Assert.NotNull(url);
-            // If the URL changes, I prefer to be advised here 
-            Assert.Equal("https://ddragon.leagueoflegends.com/cdn", url);
+        }
+
+        [Fact]
+        public async Task GetFormattedAPIUrl_Url_IsAPIUrlValid()
+        {
+            LoLMetadataViewModel metadata = await LoLAPIUtil.FetchAPIMetadataAsync();
+
+            // Test with "champion" as datatype but any other datatype would be same
+            string formattedAPIUrl = LoLAPIUtil.GetFormattedAPIUrl(metadata.BaseUrlAPI, metadata.Version, "champion");
+
+            using HttpClient client = new HttpClient();
+            var response = await client.GetAsync(formattedAPIUrl);
+
+            Assert.True(response.IsSuccessStatusCode);
+            Assert.True(response.Content.Headers.ContentType.MediaType == "application/json");
         }
 
         [Fact]

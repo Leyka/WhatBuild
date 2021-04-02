@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
@@ -8,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using WhatBuild.Core.ViewModels;
 
-namespace WhatBuild.Core.Helpers
+namespace WhatBuild.Core.Utils
 {
     public class LoLAPIUtil
     {
@@ -19,6 +20,7 @@ namespace WhatBuild.Core.Helpers
         {
             using HttpClient client = new HttpClient();
 
+            // TODO: Read URL from App.config
             HttpResponseMessage response = await client.GetAsync("https://ddragon.leagueoflegends.com/realms/na.json");
             response.EnsureSuccessStatusCode();
             string responseBody = await response.Content.ReadAsStringAsync();
@@ -32,12 +34,16 @@ namespace WhatBuild.Core.Helpers
             return metadata;
         }
 
+        public static string GetFormattedAPIUrl(string apiUrl, string version, string dataType)
+        {
+            return $"{apiUrl}/{version}/data/en_US/{dataType}.json";
+        }
+
         public static async Task<string> FetchDataByTypeAsync(string apiUrl, string version, string dataType)
         {
-            string formattedAPIUrl = $"{apiUrl}/{version}/data/en_US/{dataType}.json";
-
             using HttpClient client = new HttpClient();
 
+            string formattedAPIUrl = GetFormattedAPIUrl(apiUrl, version, dataType);
             HttpResponseMessage response = await client.GetAsync(formattedAPIUrl);
             response.EnsureSuccessStatusCode();
             string responseBody = await response.Content.ReadAsStringAsync();

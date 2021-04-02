@@ -2,50 +2,37 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using WhatBuild.Core.Helpers;
+using WhatBuild.Core.Interfaces;
+using WhatBuild.Core.Utils;
 using WhatBuild.Core.ViewModels;
 
 namespace WhatBuild.Core.Stores
 {
-    public class LoLStore
+    public class LoLStore : IStore
     {
-        public string BaseUrlAPI { get; }
+        public string BaseUrlAPI { get; set; }
 
-        public string Version { get; }
+        public string Version { get; set; }
 
-        private List<ChampionViewModel> _champions;
-        public List<ChampionViewModel> Champions
+        public List<ChampionViewModel> Champions { get; set; }
+
+        public List<ItemViewModel> Items { get; set; }
+
+        public async Task InitAsync()
         {
-            get
-            {
-                if (_champions == null)
-                {
-                    _champions = LoLAPIUtil.FetchAllChampionsAsync(BaseUrlAPI, Version).Result; // Note: Blocking sync function
-                }
+            // 1- Fetch metadata
+            LoLMetadataViewModel metadata = await LoLAPIUtil.FetchAPIMetadataAsync();
 
-                return _champions;
-            }
-        }
-
-        private List<ItemViewModel> _items;
-        public List<ItemViewModel> Items
-        {
-            get
-            {
-                if (_items == null)
-                {
-                    _items = LoLAPIUtil.FetchAllItemAsync(BaseUrlAPI, Version).Result; // Note: Blocking sync function
-                }
-
-                return _items;
-            }
-        }
-
-        public LoLStore()
-        {
-            LoLMetadataViewModel metadata = LoLAPIUtil.FetchAPIMetadataAsync().Result;
             BaseUrlAPI = metadata.BaseUrlAPI;
             Version = metadata.Version;
+
+            // 2- Fetch champions and items
+            var fetchChampionsTask = LoLAPIUtil.FetchAllChampionsAsync(BaseUrlAPI, Version);
+            var fetchItemsTask = LoLAPIUtil.FetchAllItemAsync(BaseUrlAPI, Version);
+            await Task.WhenAll(fetchChampionsTask, fetchItemsTask);
+
+            Champions = fetchChampionsTask.Result;
+            Items = fetchItemsTask.Result;
         }
     }
 }

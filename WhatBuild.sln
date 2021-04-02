@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31112.23
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WhatBuild.WPF", "WhatBuild.WPF\WhatBuild.WPF.csproj", "{F4C901F3-926A-4A36-9DEF-E9F0FC635C47}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WhatBuild.WPF", "WhatBuild.WPF\WhatBuild.WPF.csproj", "{F4C901F3-926A-4A36-9DEF-E9F0FC635C47}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WhatBuild.Core", "WhatBuild.Core\WhatBuild.Core.csproj", "{B42DE19A-EC03-4CBB-993A-A8AA1C5EFBFF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WhatBuild.Core", "WhatBuild.Core\WhatBuild.Core.csproj", "{B42DE19A-EC03-4CBB-993A-A8AA1C5EFBFF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WhatBuild.Tests", "WhatBuild.Tests\WhatBuild.Tests.csproj", "{2727FDFB-D881-41A9-8CEF-AA46765D7AD9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WhatBuild.Tests", "WhatBuild.Tests\WhatBuild.Tests.csproj", "{2727FDFB-D881-41A9-8CEF-AA46765D7AD9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
