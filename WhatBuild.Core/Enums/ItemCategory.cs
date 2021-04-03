@@ -4,12 +4,11 @@ using System.Text;
 
 namespace WhatBuild.Core.Enums
 {
-    public enum ChampionPosition
+    public enum ItemCategory
     {
-        Top,
-        Jungle,
-        Middle,
-        Adc,
-        Support
+        Starter,
+        Boots,
+        Core,
+        Extra
     }
 }

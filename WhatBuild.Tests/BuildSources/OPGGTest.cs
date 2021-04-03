@@ -16,23 +16,32 @@ namespace WhatBuild.Tests.BuildSources
         public async Task GetChampionPosition_ChampionPosition_IsValid()
         {
             // Annie should be middle
-            await opggClient.ReadHtmlDocumentAsync("annie");
-            Assert.True(opggClient.GetChampionPosition() == ChampionPosition.Mid);
+            await opggClient.InitAsync("annie");
+            Assert.True(opggClient.GetChampionPosition() == ChampionPosition.Middle);
 
             // Try with another champion
-            await opggClient.ReadHtmlDocumentAsync("thresh");
+            await opggClient.InitAsync("thresh");
             Assert.True(opggClient.GetChampionPosition() == ChampionPosition.Support);
         }
 
         [Fact]
         public async Task GetFormattedSkills_Skills_IsFormatted()
         {
-            await opggClient.ReadHtmlDocumentAsync("annie");
+            await opggClient.InitAsync("annie");
             string formattedSkills = opggClient.GetFormattedSkills();
 
             // Should match this format example:
             // W.Q.E.Q [Q -> W -> E]
             Assert.Matches(@"^\w.\w.\w.\w\s\[\w\s->\s\w\s->\s\w]$", formattedSkills);
+        }
+
+        [Fact]
+        public async Task GetStarterItemIds_Items_NotEmpty()
+        {
+            await opggClient.InitAsync("annie");
+            List<int> items = opggClient.GetStarterItemIds();
+
+            Assert.True(items?.Count > 0);
         }
     }
 }

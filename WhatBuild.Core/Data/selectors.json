@@ -1,0 +1,8 @@
+{
+  "opgg": {
+    "championPosition": "//*[@class='champion-stats-position']/li",
+    "firstSkillsOrder": "//table[@class='champion-skill-build__table']/tbody/tr[2]/td",
+    "generalSkillsOrder": "//*[contains(@class, 'champion-stats__list__item tip')]/span",
+    "allItemCategories": ".//table[@class='champion-overview__table']/tbody/tr"
+  }
+}

@@ -3,40 +3,62 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
+using System.Linq;
 using System.Threading.Tasks;
 using WhatBuild.Core.Enums;
 using WhatBuild.Core.Interfaces;
 using WhatBuild.Core.Utils;
+using WhatBuild.Core.ViewModels;
+using WhatBuild.Core.Stores;
 
 namespace WhatBuild.Core.BuildSources
 {
     /// <summary>
-    /// Will fetch the most popular position build
+    /// Fetch the most popular position build
     /// </summary>
     /// <see cref="https://op.gg"/>
     public class OPGG : IBuildSource
     {
-        private string BaseUrl => "https://www.op.gg/champion/";
+        private readonly string _baseUrl = "https://www.op.gg/champion/";
 
         private HtmlDocument Document { get; set; }
 
-        public async Task ReadHtmlDocumentAsync(string championName)
+        private SelectorViewModel Selector { get; set; }
+
+        public async Task InitAsync(string championName)
         {
-            string championUrl = BaseUrl + championName;
+            Task<HtmlDocument> fetchHtmlTask = FetchHtmlAsync(championName);
+            Task<SelectorViewModel> fetchSelectorTask = FetchSelectorDataAsync();
+
+            await Task.WhenAll(fetchHtmlTask, fetchSelectorTask);
+
+            Document = fetchHtmlTask.Result;
+            Selector = fetchSelectorTask.Result;
+        }
+
+        private Task<HtmlDocument> FetchHtmlAsync(string championName)
+        {
+            string championUrl = _baseUrl + championName;
 
             HtmlWeb web = new HtmlWeb();
 
             // TODO/v2: Handle multiple positions
             // Right now, 1 document is assigned to one champion per popular position
-            Document = await web.LoadFromWebAsync(championUrl);
+            return web.LoadFromWebAsync(championUrl);
+        }
+
+        private async Task<SelectorViewModel> FetchSelectorDataAsync()
+        {
+            SelectorStore selectorStore = await StoreManager<SelectorStore>.GetAsync();
+
+            return selectorStore.SelectorsDictionary[BuildSourceType.OPGG];
         }
 
         #region Positions
         public ChampionPosition GetChampionPosition()
         {
-            // Select the most popular position (first)
-            // TODO/v2: Store XPath somewhere in Github Gist so that it gets recent xpath without updating software
-            HtmlNode nodePosition = Document.DocumentNode.SelectSingleNode("//*[@class='champion-stats-position']/li");
+            HtmlNode nodePosition = Document.DocumentNode.SelectSingleNode(Selector.ChampionPosition);
+
             if (nodePosition == null)
             {
                 throw new NullReferenceException("[OP.GG] Node position was not found");
@@ -66,7 +88,7 @@ namespace WhatBuild.Core.BuildSources
         /// </summary>
         private string GetGeneralSkillsOrder()
         {
-            HtmlNodeCollection nodes = Document.DocumentNode.SelectNodes("//*[contains(@class, 'champion-stats__list__item tip')]/span");
+            HtmlNodeCollection nodes = Document.DocumentNode.SelectNodes(Selector.GeneralSkillsOrder);
 
             if (nodes.Count != 3)
             {
@@ -82,7 +104,7 @@ namespace WhatBuild.Core.BuildSources
         /// </summary>
         private string GetFirstSkillsOrder()
         {
-            HtmlNodeCollection nodes = Document.DocumentNode.SelectNodes("//table[@class='champion-skill-build__table']/tbody/tr[2]/td");
+            HtmlNodeCollection nodes = Document.DocumentNode.SelectNodes(Selector.FirstSkillsOrder);
 
             if (nodes.Count < 4)
             {
@@ -104,15 +126,72 @@ namespace WhatBuild.Core.BuildSources
 
         #region Item builds
 
-        #region Starter Items
+        public List<int> GetStarterItemIds()
+        {
+            // TODO/v2: Automatically fetch next category without hard coding it
+            // Starter items start from the Starter until we arrive to Recommended/Core items
+            int startIndex = GetRowIndexByItemCategory(ItemCategory.Starter);
+            int endIndex = GetRowIndexByItemCategory(ItemCategory.Core);
+
+            for (int i = startIndex; i < endIndex; i++)
+            {
+                // TODO: Continue
+                // Get Items by img path
+            }
+
+            throw new NotSupportedException();
+        }
+
+        public List<int> GetCoreItemIds()
+        {
+            throw new NotSupportedException();
+        }
+
+        public List<int> GetExtraItemIds()
+        {
+            throw new NotSupportedException();
+        }
+
+        public List<int> GetBootItemIds()
+        {
+            throw new NotSupportedException();
+        }
+
         #endregion
 
-        #region Core Items
-        #endregion
+        #region Helpers
+        /// <summary>
+        /// After looking in table containing items, returns the index row of each wanted category
+        /// </summary>
+        /// <param name="category">Category type</param>
+        /// <returns>Index row</returns>
+        private int GetRowIndexByItemCategory(ItemCategory category)
+        {
+            HtmlNodeCollection nodes = Document.DocumentNode.SelectNodes(Selector.AllItemCategories);
 
-        #region Boots
-        #endregion
+            // Set keyword to look for, depending on category
+            string keyword = category switch
+            {
+                ItemCategory.Starter => "starter",
+                ItemCategory.Boots => "boots",
+                ItemCategory.Core => "recommended",
+                ItemCategory.Extra => "recommended",
+                _ => throw new NotImplementedException(),
+            };
 
+            HtmlNode foundNode = nodes.FirstOrDefault(n => n.InnerText.ToLower().Contains(keyword));
+            if (foundNode == null)
+            {
+                throw new NullReferenceException($"Index row was not found with keyword: {keyword}");
+            }
+
+            return nodes.IndexOf(foundNode);
+        }
+
+        private int GetTotalItemCategories()
+        {
+            return Document.DocumentNode.SelectNodes(Selector.AllItemCategories).Count;
+        }
         #endregion
     }
 }

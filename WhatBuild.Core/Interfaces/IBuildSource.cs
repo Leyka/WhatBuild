@@ -8,10 +8,18 @@ namespace WhatBuild.Core.Interfaces
 {
     public interface IBuildSource
     {
-        Task ReadHtmlDocumentAsync(string championName);
+        Task InitAsync(string championName);
 
         ChampionPosition GetChampionPosition();
 
         string GetFormattedSkills();
+
+        List<int> GetStarterItemIds();
+
+        List<int> GetCoreItemIds();
+
+        List<int> GetExtraItemIds();
+
+        List<int> GetBootItemIds();
     }
 }
