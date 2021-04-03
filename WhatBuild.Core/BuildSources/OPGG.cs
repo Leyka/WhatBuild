@@ -10,6 +10,7 @@ using WhatBuild.Core.Interfaces;
 using WhatBuild.Core.Utils;
 using WhatBuild.Core.ViewModels;
 using WhatBuild.Core.Stores;
+using System.Text.RegularExpressions;
 
 namespace WhatBuild.Core.BuildSources
 {
@@ -24,6 +25,20 @@ namespace WhatBuild.Core.BuildSources
         private HtmlDocument Document { get; set; }
 
         private SelectorViewModel Selector { get; set; }
+
+        private SortedList<ItemCategory, int> _itemCategoryOrders;
+        private SortedList<ItemCategory, int> ItemCategoriesDictionary
+        {
+            get
+            {
+                if (_itemCategoryOrders == null)
+                {
+                    _itemCategoryOrders = GetItemCategoriesOrdered();
+                }
+
+                return _itemCategoryOrders;
+            }
+        }
 
         public async Task InitAsync(string championName)
         {
@@ -52,6 +67,21 @@ namespace WhatBuild.Core.BuildSources
             SelectorStore selectorStore = await StoreManager<SelectorStore>.GetAsync();
 
             return selectorStore.SelectorsDictionary[BuildSourceType.OPGG];
+        }
+
+        public string GetSourceName()
+        {
+            return "OP.GG";
+        }
+
+        public string GetVersion()
+        {
+            HtmlNode nodeVersion = Document.DocumentNode.SelectSingleNode(Selector.Version);
+            string version = nodeVersion.InnerText.Split(':').Last();
+
+            // Clean string with \t and \n
+            version = StringUtil.CleanString(version);
+            return version;
         }
 
         #region Positions
@@ -115,9 +145,7 @@ namespace WhatBuild.Core.BuildSources
                 $"{nodes[0].InnerText}.{nodes[1].InnerText}.{nodes[2].InnerText}.{nodes[3].InnerText}";
 
             // We need to clean string (full of \n and \t)
-            formattedFirstSkills = formattedFirstSkills
-                .Replace("\t", string.Empty)
-                .Replace("\n", string.Empty);
+            formattedFirstSkills = StringUtil.CleanString(formattedFirstSkills);
 
             return formattedFirstSkills;
         }
@@ -128,38 +156,91 @@ namespace WhatBuild.Core.BuildSources
 
         public List<int> GetStarterItemIds()
         {
-            // TODO/v2: Automatically fetch next category without hard coding it
-            // Starter items start from the Starter until we arrive to Recommended/Core items
-            int startIndex = GetRowIndexByItemCategory(ItemCategory.Starter);
-            int endIndex = GetRowIndexByItemCategory(ItemCategory.Core);
-
-            for (int i = startIndex; i < endIndex; i++)
-            {
-                // TODO: Continue
-                // Get Items by img path
-            }
-
-            throw new NotSupportedException();
+            return GetItemsIdsByCategory(ItemCategory.Starter);
         }
 
         public List<int> GetCoreItemIds()
         {
-            throw new NotSupportedException();
+            return GetItemsIdsByCategory(ItemCategory.Core);
+        }
+        public List<int> GetBootItemIds()
+        {
+            return GetItemsIdsByCategory(ItemCategory.Boots);
         }
 
         public List<int> GetExtraItemIds()
         {
-            throw new NotSupportedException();
+            return null;
         }
-
-        public List<int> GetBootItemIds()
-        {
-            throw new NotSupportedException();
-        }
-
-        #endregion
 
         #region Helpers
+        private List<int> GetItemsIdsByCategory(ItemCategory category)
+        {
+            if (!ItemCategoriesDictionary.ContainsKey(category))
+            {
+                return null;
+            }
+
+            int startIndex = ItemCategoriesDictionary[category];
+            int endIndex = GetNextItemCategoryRowIndex(category);
+
+            return GetUniqueItemIds(startIndex, endIndex);
+        }
+
+        /// <summary>
+        /// Returns a unique list of item ids based on the category index
+        /// In OP.GG, the item ID can be found in "1234.png" in <img> tag 
+        /// Note: A category is 
+        /// </summary>
+        /// <param name="startIndexCategory">Where the category starts</param>
+        /// <param name="endIndexCategory"></param>
+        /// <returns></returns>
+        private List<int> GetUniqueItemIds(int startIndexCategory, int endIndexCategory)
+        {
+            // Only unique ID will be added, therefore -> hashset
+            HashSet<int> uniqueItemIds = new HashSet<int>();
+
+            HtmlNodeCollection allItemCategorieNodes = Document.DocumentNode.SelectNodes(Selector.AllItemCategories);
+            for (int i = startIndexCategory; i < endIndexCategory; i++)
+            {
+                HtmlNode itemCategory = allItemCategorieNodes[i];
+
+                HtmlNodeCollection itemNodes = itemCategory.SelectNodes(Selector.Items);
+
+                // Get Item id from item node
+                IEnumerable<int> itemIds = itemNodes.Select(itemNode =>
+                {
+                    string srcImg = itemNode.Attributes[0].Value;
+                    return GetItemIdFromImageSrc(srcImg);
+                });
+
+                uniqueItemIds.UnionWith(itemIds);
+            }
+
+            return uniqueItemIds.ToList();
+        }
+
+        private SortedList<ItemCategory, int> GetItemCategoriesOrdered()
+        {
+            Dictionary<ItemCategory, int> itemCategories = new Dictionary<ItemCategory, int>
+            {
+                { ItemCategory.Starter, GetRowIndexByItemCategory(ItemCategory.Starter) },
+                { ItemCategory.Boots, GetRowIndexByItemCategory(ItemCategory.Boots) },
+                { ItemCategory.Core, GetRowIndexByItemCategory(ItemCategory.Core) },
+            };
+
+            var orderedItemCategories =
+                itemCategories
+                    .Where(x => x.Value >= 0) // Filter from Row index -1, which doesn't exist
+                    .ToDictionary(x => x.Key, x => x.Value);
+
+            // Returns sorted list by RowIndex
+            return new SortedList<ItemCategory, int>(
+                orderedItemCategories,
+                Comparer<ItemCategory>.Create((k1, k2) => itemCategories[k1].CompareTo(itemCategories[k2]))
+            );
+        }
+
         /// <summary>
         /// After looking in table containing items, returns the index row of each wanted category
         /// </summary>
@@ -182,16 +263,45 @@ namespace WhatBuild.Core.BuildSources
             HtmlNode foundNode = nodes.FirstOrDefault(n => n.InnerText.ToLower().Contains(keyword));
             if (foundNode == null)
             {
-                throw new NullReferenceException($"Index row was not found with keyword: {keyword}");
+                return -1;
             }
 
             return nodes.IndexOf(foundNode);
+        }
+
+        private int GetNextItemCategoryRowIndex(ItemCategory current)
+        {
+            int indexCurrent = ItemCategoriesDictionary.IndexOfKey(current);
+
+            // Check if last category item, returns the item categories size
+            bool isLastIndex = indexCurrent == ItemCategoriesDictionary.Count - 1;
+            if (isLastIndex)
+            {
+                return GetTotalItemCategories();
+            }
+
+            // Return next row index 
+            int nextCategoryRowIndex = ItemCategoriesDictionary.Values[indexCurrent + 1];
+            return nextCategoryRowIndex;
         }
 
         private int GetTotalItemCategories()
         {
             return Document.DocumentNode.SelectNodes(Selector.AllItemCategories).Count;
         }
+
+        private int GetItemIdFromImageSrc(string imageSrc)
+        {
+            Match m = new Regex(@".*\/(\d+).*").Match(imageSrc);
+            if (m.Success)
+            {
+                return int.Parse(m.Groups[1].Value);
+            }
+
+            throw new NullReferenceException($"Image ID was not found with imageSrc: {imageSrc}");
+        }
+        #endregion
+
         #endregion
     }
 }

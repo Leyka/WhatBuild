@@ -10,6 +10,9 @@ namespace WhatBuild.Core.ViewModels
     /// </summary>
     public class SelectorViewModel
     {
+        [JsonProperty("version")]
+        public string Version { get; set; }
+
         [JsonProperty("championPosition")]
         public string ChampionPosition { get; set; }
 
@@ -21,5 +24,8 @@ namespace WhatBuild.Core.ViewModels
 
         [JsonProperty("allItemCategories")]
         public string AllItemCategories { get; set; }
+
+        [JsonProperty("items")]
+        public string Items { get; set; }
     }
 }

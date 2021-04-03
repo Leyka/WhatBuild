@@ -13,6 +13,16 @@ namespace WhatBuild.Tests.BuildSources
         private readonly OPGG opggClient = new OPGG();
 
         [Fact]
+        public async Task GetVersion_Version_IsValid()
+        {
+            // Annie should be middle
+            await opggClient.InitAsync("annie");
+
+            string version = opggClient.GetVersion();
+            Assert.Matches(@"\d+.\d+", version);
+        }
+
+        [Fact]
         public async Task GetChampionPosition_ChampionPosition_IsValid()
         {
             // Annie should be middle
@@ -36,9 +46,36 @@ namespace WhatBuild.Tests.BuildSources
         }
 
         [Fact]
-        public async Task GetStarterItemIds_Items_NotEmpty()
+        public async Task GetStarterItemIds_StarterItems_NotEmpty()
         {
             await opggClient.InitAsync("annie");
+            List<int> items = opggClient.GetStarterItemIds();
+
+            Assert.True(items?.Count > 0);
+        }
+
+        [Fact]
+        public async Task GetCoreItemIds_CoreItems_NotEmpty()
+        {
+            await opggClient.InitAsync("annie");
+            List<int> items = opggClient.GetCoreItemIds();
+
+            Assert.True(items?.Count > 0);
+        }
+
+        [Fact]
+        public async Task GetBootItemIds_Boots_NotEmptyForAnnie()
+        {
+            await opggClient.InitAsync("annie");
+            List<int> items = opggClient.GetBootItemIds();
+
+            Assert.True(items?.Count > 0);
+        }
+
+        [Fact]
+        public async Task GetBootItemIds_Boots_IsEmptyForCassiopeia()
+        {
+            await opggClient.InitAsync("cassiopeia");
             List<int> items = opggClient.GetStarterItemIds();
 
             Assert.True(items?.Count > 0);

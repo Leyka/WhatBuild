@@ -10,6 +10,10 @@ namespace WhatBuild.Core.Interfaces
     {
         Task InitAsync(string championName);
 
+        string GetVersion();
+
+        string GetSourceName();
+
         ChampionPosition GetChampionPosition();
 
         string GetFormattedSkills();
