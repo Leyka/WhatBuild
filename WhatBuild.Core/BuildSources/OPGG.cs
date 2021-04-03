@@ -5,6 +5,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using WhatBuild.Core.Enums;
+using WhatBuild.Core.Interfaces;
 using WhatBuild.Core.Utils;
 
 namespace WhatBuild.Core.BuildSources
@@ -13,15 +14,15 @@ namespace WhatBuild.Core.BuildSources
     /// Will fetch the most popular position build
     /// </summary>
     /// <see cref="https://op.gg"/>
-    public class OPGG
+    public class OPGG : IBuildSource
     {
         private string BaseUrl => "https://www.op.gg/champion/";
 
         private HtmlDocument Document { get; set; }
 
-        public async Task ReadHtmlDocumentAsync(string champion)
+        public async Task ReadHtmlDocumentAsync(string championName)
         {
-            string championUrl = BaseUrl + champion;
+            string championUrl = BaseUrl + championName;
 
             HtmlWeb web = new HtmlWeb();
 
@@ -65,9 +66,14 @@ namespace WhatBuild.Core.BuildSources
         /// </summary>
         private string GetGeneralSkillsOrder()
         {
-            HtmlNodeCollection nodes = Document.DocumentNode.SelectNodes("//*[contains(@class, 'tpd-delegation-uid-1')]/span");
+            HtmlNodeCollection nodes = Document.DocumentNode.SelectNodes("//*[contains(@class, 'champion-stats__list__item tip')]/span");
 
-            return null;
+            if (nodes.Count != 3)
+            {
+                throw new InvalidOperationException("General skills are only composed of 3 main skills");
+            }
+
+            return $"{nodes[0].InnerText} -> {nodes[1].InnerText} -> {nodes[2].InnerText}";
         }
 
         /// <summary>
@@ -76,7 +82,22 @@ namespace WhatBuild.Core.BuildSources
         /// </summary>
         private string GetFirstSkillsOrder()
         {
-            return null;
+            HtmlNodeCollection nodes = Document.DocumentNode.SelectNodes("//table[@class='champion-skill-build__table']/tbody/tr[2]/td");
+
+            if (nodes.Count < 4)
+            {
+                throw new InvalidOperationException($"There should be at least 4 first skills to level");
+            }
+
+            string formattedFirstSkills =
+                $"{nodes[0].InnerText}.{nodes[1].InnerText}.{nodes[2].InnerText}.{nodes[3].InnerText}";
+
+            // We need to clean string (full of \n and \t)
+            formattedFirstSkills = formattedFirstSkills
+                .Replace("\t", string.Empty)
+                .Replace("\n", string.Empty);
+
+            return formattedFirstSkills;
         }
 
         #endregion
