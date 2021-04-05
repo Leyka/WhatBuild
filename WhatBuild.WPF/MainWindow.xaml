@@ -5,8 +5,51 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WhatBuild.WPF"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        WindowStartupLocation="CenterScreen"
+        Title="WhatBuild" Height="400" Width="400">
     <Grid>
-
+        <DockPanel Height="20" VerticalAlignment="Top">
+            <Menu DockPanel.Dock="Top" Background="White" Height="22">
+                <MenuItem Header="_File">
+                    <MenuItem Header="_Exit" Click="MenuItem_Click" />
+                </MenuItem>
+            </Menu>
+        </DockPanel>
+        <Grid Margin="5, 25, 5, 5">
+            <GroupBox Padding="5" Header="League of Legends Directory" Margin="0,0,0,250">
+                <StackPanel VerticalAlignment="Top">
+                    <TextBox x:Name="txtLoLDirectory" Height="26" IsReadOnly="True" PreviewMouseDown="txtLoLDirectory_PreviewMouseDown" Cursor="Hand" />
+                    <Label x:Name="lblLoLDirectoryStatus" HorizontalAlignment="Center" />
+                </StackPanel>
+            </GroupBox>
+            <Grid Height="250" VerticalAlignment="Bottom">
+                <GroupBox Padding="5" Header="Item Set (op.gg)" Margin="0,0,0,125">
+                    <StackPanel>
+                        <CheckBox x:Name="chkRemoveOutdatedItems" HorizontalAlignment="Left" VerticalAlignment="Top" IsChecked="True" Margin="5">Remove outdated item sets</CheckBox>
+                        <CheckBox x:Name="chkShowSkillOrders" HorizontalAlignment="Left" VerticalAlignment="Top" IsChecked="True" Margin="5">Show skill orders</CheckBox>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Button x:Name="btnImport" Width="100" Margin="10" FontWeight="Bold" Cursor="Hand">
+                                Import
+                            </Button>
+                            <Button x:Name="btnDelete" Width="100" Margin="10" FontWeight="Bold" Cursor="Hand">
+                                Delete
+                            </Button>
+                            <Button x:Name="btnCancel" Width="100" Margin="10" FontWeight="Bold" Cursor="Hand" Visibility="Collapsed">
+                                Cancel
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+                <StackPanel x:Name="spVersions" VerticalAlignment="Bottom" Height="110" Visibility="Collapsed">
+                    <Label x:Name="lblLoLVersion">LoL version: 1.0</Label>
+                    <Label x:Name="lblOPGGVersion">OP.gg version: 1.0</Label>
+                    <Label x:Name="lblLocalItemsVersion">Local items version: None</Label>
+                </StackPanel>
+                <StackPanel x:Name="spProgress" VerticalAlignment="Bottom" Height="110">
+                    <ProgressBar Height="20" Margin="5" Value="50" />
+                    <TextBlock Margin="5" Height="72"></TextBlock>
+                </StackPanel>
+            </Grid>
+        </Grid>
     </Grid>
 </Window>

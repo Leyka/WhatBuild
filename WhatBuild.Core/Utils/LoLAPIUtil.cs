@@ -20,7 +20,6 @@ namespace WhatBuild.Core.Utils
         {
             using HttpClient client = new HttpClient();
 
-            // TODO: Read URL from App.config
             HttpResponseMessage response = await client.GetAsync("https://ddragon.leagueoflegends.com/realms/na.json");
             response.EnsureSuccessStatusCode();
             string responseBody = await response.Content.ReadAsStringAsync();
@@ -89,8 +88,7 @@ namespace WhatBuild.Core.Utils
             List<ItemViewModel> itemsWithId = dictItems.Values
                 .Select((itemViewModel, index) =>
                 {
-                    // The API store the item ID only as "key" 
-                    // Manually bind "id" to view model
+                    // The API store the item ID only as "key" => Manually bind "id" to view model
                     itemViewModel.Id = dictItems.Keys.ElementAt(index);
                     return itemViewModel;
                 })
