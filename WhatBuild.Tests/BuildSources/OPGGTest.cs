@@ -76,9 +76,9 @@ namespace WhatBuild.Tests.BuildSources
         public async Task GetBootItemIds_Boots_IsEmptyForCassiopeia()
         {
             await opggClient.InitAsync("cassiopeia");
-            List<int> items = opggClient.GetStarterItemIds();
+            List<int> items = opggClient.GetBootItemIds();
 
-            Assert.True(items?.Count > 0);
+            Assert.Null(items);
         }
     }
 }

@@ -14,6 +14,9 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using WhatBuild.Core.BuildSources;
+using WhatBuild.Core.Interfaces;
+using WhatBuild.Core.Stores;
 using WhatBuild.Core.Utils;
 
 namespace WhatBuild.WPF
@@ -23,6 +26,9 @@ namespace WhatBuild.WPF
     /// </summary>
     public partial class MainWindow : Window
     {
+        // Only op.gg will be supported for first versions
+        private IBuildSource opgg = new OPGG();
+
         public MainWindow()
         {
             InitializeComponent();
@@ -30,26 +36,20 @@ namespace WhatBuild.WPF
             FillFormsWithUserSettings();
         }
 
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            await ShowAllVersionsAsync();
+        }
+
         private void MenuItem_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
         }
 
-        public void FillFormsWithUserSettings()
+        private async void btnImport_Click(object sender, RoutedEventArgs e)
         {
-            string lolDirectory = Properties.Settings.Default.LoLDirectory;
-
-            txtLoLDirectory.Text = lolDirectory;
-
-            // Check if LoL directory is valid
-            if (PathUtil.IsValidLeagueOfLegendsDirectory(lolDirectory))
-            {
-                ChangeLoLStatusToFound();
-            }
-            else
-            {
-                ChangeLoLStatusToNotFound();
-            }
+            grpMetadata.Visibility = Visibility.Collapsed;
+            grpProgress.Visibility = Visibility.Visible;
         }
 
         private void txtLoLDirectory_PreviewMouseDown(object sender, MouseButtonEventArgs e)
@@ -84,7 +84,54 @@ namespace WhatBuild.WPF
             }
         }
 
+        private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
+        {
+            Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri)
+            {
+                UseShellExecute = true
+            });
+
+            e.Handled = true;
+        }
+
+        private void FillFormsWithUserSettings()
+        {
+            string lolDirectory = Properties.Settings.Default.LoLDirectory;
+
+            txtLoLDirectory.Text = lolDirectory;
+
+            // Check if LoL directory is valid
+            if (PathUtil.IsValidLeagueOfLegendsDirectory(lolDirectory))
+            {
+                ChangeLoLStatusToFound();
+            }
+            else
+            {
+                ChangeLoLStatusToNotFound();
+            }
+        }
+
         #region Helpers
+        private async Task ShowAllVersionsAsync()
+        {
+            Task<LoLStore> taskLoLStore = StoreManager<LoLStore>.GetAsync();
+            Task taskInitOpgg = opgg.InitAsync("annie");
+
+            await Task.WhenAll(taskLoLStore, taskInitOpgg);
+
+            // Local version
+            string localItemsVersion = string.IsNullOrEmpty(Properties.Settings.Default.LocalItemsVersion)
+                ? "None"
+                : Properties.Settings.Default.LocalItemsVersion;
+
+            if (grpMetadata.Visibility == Visibility.Visible)
+            {
+                lblLoLVersion.Content = $"LoL version: {taskLoLStore.Result.Version}";
+                lblOPGGVersion.Content = $"op.gg version: {opgg.GetVersion()}";
+                lblLocalItemsVersion.Content = $"Local items version: {localItemsVersion}";
+            }
+        }
+
         private void ChangeLoLStatusToFound()
         {
             lblLoLDirectoryStatus.Content = "League of Legends found";
@@ -96,7 +143,6 @@ namespace WhatBuild.WPF
             lblLoLDirectoryStatus.Content = "League of Legends not found";
             lblLoLDirectoryStatus.Foreground = Brushes.DarkRed;
         }
-
         #endregion
     }
 }
