@@ -89,9 +89,11 @@ namespace WhatBuild.WPF
             // TODO: Validate path
             string lolDirectory = Properties.Settings.Default.LoLDirectory;
 
-            // UI toggle group visibility
+            // UI toggle visibility
             grpMetadata.Visibility = Visibility.Collapsed;
             grpProgress.Visibility = Visibility.Visible;
+            btnImport.Visibility = Visibility.Collapsed;
+            btnCancel.Visibility = Visibility.Visible;
 
             // Fetch configuration 
             var config = new ConfigurationViewModel
@@ -106,7 +108,19 @@ namespace WhatBuild.WPF
             if (IsCheckedSourceOPGG)
             {
                 var opggGenerator = new ItemSetGenerator<OPGG>(config);
-                await opggGenerator.GenerateItemSetForAllChampionsAsync(CancelTokenSource.Token);
+
+                try
+                {
+                    await opggGenerator.GenerateItemSetForAllChampionsAsync(CancelTokenSource.Token);
+                }
+                catch (OperationCanceledException ex) when (ex.CancellationToken == CancelTokenSource.Token)
+                {
+                    // Toggle UI visibility
+                    btnImport.Visibility = Visibility.Visible;
+                    btnCancel.Visibility = Visibility.Collapsed;
+                    // TODO: Log that operation has been cancelled
+                    Debug.WriteLine("Cancelled");
+                }
             }
         }
 
