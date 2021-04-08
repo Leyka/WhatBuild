@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Linq;
 using System.Threading.Tasks;
 using WhatBuild.Core.Utils;
 using WhatBuild.Core.ViewModels;
 using Xunit;
 
-namespace WhatBuild.Tests.Helpers
+
+namespace WhatBuild.Tests.Utils
 {
     public class LoLAPIUtilTest
     {
@@ -52,6 +54,18 @@ namespace WhatBuild.Tests.Helpers
             List<ChampionViewModel> champions = await LoLAPIUtil.FetchAllChampionsAsync(metadata.BaseUrlAPI, metadata.Version);
 
             Assert.True(champions.Count > 0);
+        }
+
+        [Fact]
+        public async Task FetchAllChampions_LoLChampionViewModel_DoesNotContainMonkeyKing()
+        {
+            LoLMetadataViewModel metadata = await LoLAPIUtil.FetchAPIMetadataAsync();
+
+            List<ChampionViewModel> champions = await LoLAPIUtil.FetchAllChampionsAsync(metadata.BaseUrlAPI, metadata.Version);
+
+            // Test case where Wukong is named MonkeyKing (shouldn't pass)
+            Assert.DoesNotContain(champions, champion => champion.Name == "MonkeyKing");
+            Assert.Contains(champions, champion => champion.Name == "Wukong");
         }
 
         [Fact]

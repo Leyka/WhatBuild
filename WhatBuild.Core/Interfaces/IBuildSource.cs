@@ -10,6 +10,8 @@ namespace WhatBuild.Core.Interfaces
     {
         Task InitAsync(string championName);
 
+        bool IsValidContent();
+
         string GetVersion();
 
         string GetSourceName();

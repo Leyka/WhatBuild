@@ -12,5 +12,10 @@ namespace WhatBuild.Core.ViewModels
 
         [JsonProperty("id")]
         public string Name { get; set; }
+
+        public override string ToString()
+        {
+            return $"{Id}:{Name}";
+        }
     }
 }

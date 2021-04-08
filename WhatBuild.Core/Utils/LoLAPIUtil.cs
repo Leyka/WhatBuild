@@ -13,6 +13,11 @@ namespace WhatBuild.Core.Utils
 {
     public class LoLAPIUtil
     {
+        private static Dictionary<string, string> _dictKnownChampionAlias = new Dictionary<string, string>()
+        {
+            { "MonkeyKing", "Wukong" }
+        };
+
         /// <summary>
         /// Returns League of Legends metadata such as version, CDN url, etc.
         /// </summary>
@@ -70,7 +75,22 @@ namespace WhatBuild.Core.Utils
                 throw new NullReferenceException("No champions found, check that the API is valid");
             }
 
-            return dictChampions.Values.ToList();
+            List<ChampionViewModel> champions = dictChampions.Values.ToList();
+
+            // Some champions (like Wukong named MonkeyKing) are known to have alias, fix them with their normal name
+            // So "MonkeyKing" becomes "Wukong"
+            PostFixChampionNames(champions);
+
+            return champions;
+        }
+
+        private static void PostFixChampionNames(List<ChampionViewModel> champions)
+        {
+            foreach (var championAlias in _dictKnownChampionAlias)
+            {
+                ChampionViewModel championToFix = champions.FirstOrDefault(c => c.Name == championAlias.Key);
+                championToFix.Name = championAlias.Value;
+            }
         }
 
         public static async Task<List<ItemViewModel>> FetchAllItemAsync(string apiUrl, string version)

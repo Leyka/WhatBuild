@@ -69,6 +69,17 @@ namespace WhatBuild.Core.BuildSources
             return selectorStore.SelectorsDictionary[BuildSourceType.OPGG];
         }
 
+        public bool IsValidContent()
+        {
+            if (Document?.DocumentNode == null) return false;
+
+            // We shouldn't see this error message in order to be valide in OPGG
+            string notValidText = "an error has occurred";
+            string pageContent = StringUtil.CleanString(Document.DocumentNode.InnerText);
+
+            return !pageContent.ToLower().Contains(notValidText);
+        }
+
         public string GetSourceName()
         {
             return "OP.GG";
