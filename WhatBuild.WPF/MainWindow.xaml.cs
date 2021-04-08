@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,6 +32,7 @@ namespace WhatBuild.WPF
     {
         public CancellationTokenSource CancelTokenSource { get; set; }
 
+        public string AppVersion { get; } = Assembly.GetExecutingAssembly().GetName().Version.ToString();
         public bool IsCheckedRemoveOutdated { get; set; } = true;
         public bool IsCheckedShowSkillOrders { get; set; } = true;
         public bool IsCheckedSourceOPGG { get; set; } = true;
@@ -54,6 +56,9 @@ namespace WhatBuild.WPF
             chkRemoveOutdatedItems.DataContext = this;
             chkShowSkillOrders.DataContext = this;
             chkSourceOpgg.DataContext = this;
+
+            // Labels
+            lblVersion.DataContext = this;
         }
 
         private void FillFormsWithUserSettings()
