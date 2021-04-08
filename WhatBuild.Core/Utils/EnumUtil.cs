@@ -4,9 +4,9 @@ using System.Text;
 
 namespace WhatBuild.Core.Utils
 {
-    public class EnumUtil<T> where T : Enum
+    public class EnumUtil
     {
-        public static string ToString(T enumerator)
+        public static string ToString<T>(T enumerator) where T : Enum
         {
             return Enum.GetName(typeof(T), enumerator);
         }

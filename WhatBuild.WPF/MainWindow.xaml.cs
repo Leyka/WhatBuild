@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -14,10 +15,12 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using WhatBuild.Core;
 using WhatBuild.Core.BuildSources;
 using WhatBuild.Core.Interfaces;
 using WhatBuild.Core.Stores;
 using WhatBuild.Core.Utils;
+using WhatBuild.Core.ViewModels;
 
 namespace WhatBuild.WPF
 {
@@ -26,15 +29,50 @@ namespace WhatBuild.WPF
     /// </summary>
     public partial class MainWindow : Window
     {
-        // Only op.gg will be supported for first versions
-        private IBuildSource opgg = new OPGG();
+        public CancellationTokenSource CancelTokenSource { get; set; }
+
+        public bool IsCheckedRemoveOutdated { get; set; } = true;
+        public bool IsCheckedShowSkillOrders { get; set; } = true;
+        public bool IsCheckedSourceOPGG { get; set; } = true;
 
         public MainWindow()
         {
+            // UI
             InitializeComponent();
-
             FillFormsWithUserSettings();
+
+            // DataContext
+            BindDataContexts();
+
+            CancelTokenSource = new CancellationTokenSource();
         }
+
+        #region Init
+        private void BindDataContexts()
+        {
+            // Checkboxes
+            chkRemoveOutdatedItems.DataContext = this;
+            chkShowSkillOrders.DataContext = this;
+            chkSourceOpgg.DataContext = this;
+        }
+
+        private void FillFormsWithUserSettings()
+        {
+            string lolDirectory = Properties.Settings.Default.LoLDirectory;
+
+            txtLoLDirectory.Text = lolDirectory;
+
+            // Check if LoL directory is valid
+            if (LoLPathUtil.IsValidLeagueOfLegendsDirectory(lolDirectory))
+            {
+                ChangeLoLStatusToFound();
+            }
+            else
+            {
+                ChangeLoLStatusToNotFound();
+            }
+        }
+        #endregion
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
@@ -43,13 +81,38 @@ namespace WhatBuild.WPF
 
         private void MenuItem_Click(object sender, RoutedEventArgs e)
         {
-            this.Close();
+            Close();
         }
 
         private async void btnImport_Click(object sender, RoutedEventArgs e)
         {
+            // TODO: Validate path
+            string lolDirectory = Properties.Settings.Default.LoLDirectory;
+
+            // UI toggle group visibility
             grpMetadata.Visibility = Visibility.Collapsed;
             grpProgress.Visibility = Visibility.Visible;
+
+            // Fetch configuration 
+            var config = new ConfigurationViewModel
+            {
+                ApplicationPrefixName = Properties.Settings.Default.AppPrefixName,
+                LoLDirectory = lolDirectory,
+                RemoveOutdatedItems = IsCheckedRemoveOutdated,
+                ShowSkillsOrder = IsCheckedShowSkillOrders
+            };
+
+            // Start generation
+            if (IsCheckedSourceOPGG)
+            {
+                var opggGenerator = new ItemSetGenerator<OPGG>(config);
+                await opggGenerator.GenerateItemSetForAllChampionsAsync(CancelTokenSource.Token);
+            }
+        }
+
+        private void btnCancel_Click(object sender, RoutedEventArgs e)
+        {
+            CancelTokenSource.Cancel();
         }
 
         private void txtLoLDirectory_PreviewMouseDown(object sender, MouseButtonEventArgs e)
@@ -68,7 +131,7 @@ namespace WhatBuild.WPF
                 txtLoLDirectory.Text = path;
 
                 // Validate path
-                bool isValidDirectory = PathUtil.IsValidLeagueOfLegendsDirectory(path);
+                bool isValidDirectory = LoLPathUtil.IsValidLeagueOfLegendsDirectory(path);
                 Properties.Settings.Default.LoLDirectory = path;
 
                 if (isValidDirectory)
@@ -94,26 +157,11 @@ namespace WhatBuild.WPF
             e.Handled = true;
         }
 
-        private void FillFormsWithUserSettings()
-        {
-            string lolDirectory = Properties.Settings.Default.LoLDirectory;
-
-            txtLoLDirectory.Text = lolDirectory;
-
-            // Check if LoL directory is valid
-            if (PathUtil.IsValidLeagueOfLegendsDirectory(lolDirectory))
-            {
-                ChangeLoLStatusToFound();
-            }
-            else
-            {
-                ChangeLoLStatusToNotFound();
-            }
-        }
-
         #region Helpers
         private async Task ShowAllVersionsAsync()
         {
+            // TODO: Find better way to fetch version?
+            IBuildSource opgg = new OPGG();
             Task<LoLStore> taskLoLStore = StoreManager<LoLStore>.GetAsync();
             Task taskInitOpgg = opgg.InitAsync("annie");
 

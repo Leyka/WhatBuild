@@ -25,5 +25,9 @@ namespace WhatBuild.Core.Interfaces
         List<int> GetExtraItemIds();
 
         List<int> GetBootItemIds();
+
+        bool HasBootsCategory();
+
+        bool HasExtraCategory();
     }
 }

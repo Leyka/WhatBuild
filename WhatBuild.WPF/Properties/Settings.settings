@@ -8,5 +8,8 @@
     <Setting Name="LocalItemsVersion" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="AppPrefixName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">WB</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

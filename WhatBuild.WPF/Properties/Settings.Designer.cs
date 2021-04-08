@@ -46,5 +46,14 @@ namespace WhatBuild.WPF.Properties {
                 this["LocalItemsVersion"] = value;
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("WB")]
+        public string AppPrefixName {
+            get {
+                return ((string)(this["AppPrefixName"]));
+            }
+        }
     }
 }

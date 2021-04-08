@@ -173,6 +173,16 @@ namespace WhatBuild.Core.BuildSources
             return null;
         }
 
+        public bool HasBootsCategory()
+        {
+            return GetBootItemIds()?.Count > 0;
+        }
+
+        public bool HasExtraCategory()
+        {
+            return GetExtraItemIds()?.Count > 0;
+        }
+
         #region Helpers
         private List<int> GetItemsIdsByCategory(ItemCategory category)
         {
@@ -300,6 +310,7 @@ namespace WhatBuild.Core.BuildSources
 
             throw new NullReferenceException($"Image ID was not found with imageSrc: {imageSrc}");
         }
+
         #endregion
 
         #endregion

@@ -14,7 +14,8 @@ namespace WhatBuild.Core.Utils
             return s
                 .Replace("\t", string.Empty)
                 .Replace("\r", string.Empty)
-                .Replace("\n", string.Empty);
+                .Replace("\n", string.Empty)
+                .Trim();
         }
     }
 }
