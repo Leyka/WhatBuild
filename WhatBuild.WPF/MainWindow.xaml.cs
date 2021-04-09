@@ -22,6 +22,7 @@ using WhatBuild.Core.Interfaces;
 using WhatBuild.Core.Stores;
 using WhatBuild.Core.Utils;
 using WhatBuild.Core.ViewModels;
+using WhatBuild.WPF.Utils;
 
 namespace WhatBuild.WPF
 {
@@ -39,28 +40,19 @@ namespace WhatBuild.WPF
 
         public MainWindow()
         {
+            Mouse.OverrideCursor = System.Windows.Input.Cursors.AppStarting;
+
+            CancelTokenSource = new CancellationTokenSource();
+
             // UI
             InitializeComponent();
             FillFormsWithUserSettings();
 
-            // DataContext
-            BindDataContexts();
-
-            CancelTokenSource = new CancellationTokenSource();
+            // Bind DataContext to self
+            DataContext = this;
         }
 
         #region Init
-        private void BindDataContexts()
-        {
-            // Checkboxes
-            chkRemoveOutdatedItems.DataContext = this;
-            chkShowSkillOrders.DataContext = this;
-            chkSourceOpgg.DataContext = this;
-
-            // Labels
-            lblVersion.DataContext = this;
-        }
-
         private void FillFormsWithUserSettings()
         {
             string lolDirectory = Properties.Settings.Default.LoLDirectory;
@@ -82,6 +74,7 @@ namespace WhatBuild.WPF
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
             await ShowAllVersionsAsync();
+            Mouse.OverrideCursor = null;
         }
 
         private void MenuItem_Click(object sender, RoutedEventArgs e)
@@ -94,11 +87,12 @@ namespace WhatBuild.WPF
             // TODO: Validate path
             string lolDirectory = Properties.Settings.Default.LoLDirectory;
 
+            Reset();
+
             // UI toggle visibility
             grpMetadata.Visibility = Visibility.Collapsed;
             grpProgress.Visibility = Visibility.Visible;
-            btnImport.Visibility = Visibility.Collapsed;
-            btnCancel.Visibility = Visibility.Visible;
+            ToggleUIImport();
 
             // Fetch configuration 
             var config = new ConfigurationViewModel
@@ -112,7 +106,7 @@ namespace WhatBuild.WPF
             // Start generation
             if (IsCheckedSourceOPGG)
             {
-                var opggGenerator = new ItemSetGenerator<OPGG>(config);
+                var opggGenerator = new ItemSetGenerator<OPGG>(config, Log);
 
                 try
                 {
@@ -120,11 +114,13 @@ namespace WhatBuild.WPF
                 }
                 catch (OperationCanceledException ex) when (ex.CancellationToken == CancelTokenSource.Token)
                 {
-                    // Toggle UI visibility
-                    btnImport.Visibility = Visibility.Visible;
-                    btnCancel.Visibility = Visibility.Collapsed;
-                    // TODO: Log that operation has been cancelled
-                    Debug.WriteLine("Cancelled");
+                    // Log that operation has been cancelled
+                    Mouse.OverrideCursor = null;
+                    Log(LoggerUtil.FormatLogByBuildSource(opggGenerator.BuildSourceName, "Cancelled"));
+                }
+                finally
+                {
+                    ToggleUIImport();
                 }
             }
         }
@@ -132,6 +128,7 @@ namespace WhatBuild.WPF
         private void btnCancel_Click(object sender, RoutedEventArgs e)
         {
             CancelTokenSource.Cancel();
+            Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
         }
 
         private void txtLoLDirectory_PreviewMouseDown(object sender, MouseButtonEventArgs e)
@@ -199,6 +196,14 @@ namespace WhatBuild.WPF
             }
         }
 
+        private void ToggleUIImport()
+        {
+            WPFUtil.ToggleVisibility(btnImport);
+            WPFUtil.ToggleVisibility(btnCancel);
+
+            btnDelete.IsEnabled = !btnDelete.IsEnabled;
+        }
+
         private void ChangeLoLStatusToFound()
         {
             lblLoLDirectoryStatus.Content = "League of Legends found";
@@ -209,6 +214,20 @@ namespace WhatBuild.WPF
         {
             lblLoLDirectoryStatus.Content = "League of Legends not found";
             lblLoLDirectoryStatus.Foreground = Brushes.DarkRed;
+        }
+
+        private void Log(string message)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                tbLogs.Text += message + Environment.NewLine;
+                svLogs.ScrollToBottom();
+            });
+        }
+
+        private void Reset()
+        {
+            tbLogs.Text = "";
         }
         #endregion
     }

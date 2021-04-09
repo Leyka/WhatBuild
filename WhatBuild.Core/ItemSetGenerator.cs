@@ -17,11 +17,17 @@ namespace WhatBuild.Core
     {
         private const int MAX_CONNECTIONS_PER_DOMAIN = 6;
 
+        public string BuildSourceName { get; }
+
         public ConfigurationViewModel Configuration { get; set; }
 
-        public ItemSetGenerator(ConfigurationViewModel config)
+        private Action<string> OutputLoggerAction { get; set; }
+
+        public ItemSetGenerator(ConfigurationViewModel config, Action<string> logAction)
         {
+            BuildSourceName = typeof(T).Name;
             Configuration = config;
+            OutputLoggerAction = logAction;
         }
 
         /// <summary>
@@ -32,38 +38,21 @@ namespace WhatBuild.Core
         public async Task GenerateItemSetForAllChampionsAsync(CancellationToken cancelToken = default)
         {
             LoLStore loLStore = await StoreManager<LoLStore>.GetAsync();
-
             List<ChampionViewModel> champions = loLStore.Champions;
 
-            // TODO: This, or just log somewhere that we failed for x champion
-            List<ChampionViewModel> failedChampionGenerations = new List<ChampionViewModel>();
+            string startingLog = LoggerUtil.FormatLogByBuildSource(BuildSourceName, "Start downloading item sets...");
+            OutputLoggerAction(startingLog);
 
+            // Parallel downloads 
             await champions.ParallelForEachAsync(async champion =>
             {
-                string sourceName = typeof(T).Name;
-
-                try
-                {
-                    bool success = await GenerateItemSetByChampion(champion, cancelToken);
-
-                    if (!success)
-                    {
-                        failedChampionGenerations.Add(champion);
-                    }
-
-                    Debug.WriteLine($"{sourceName}: Succefully downloaded item set for {champion.Name}");
-                }
-                catch (Exception e)
-                {
-                    failedChampionGenerations.Add(champion);
-
-                    // TODO: Add logger
-                    // Silent exception 
-                    Debug.WriteLine($"{sourceName}: Failed to download item set for {champion.Name}. Error: {e.Message}");
-                }
+                await TryGenerateItemSetByChampion(champion, cancelToken);
             },
             maxDegreeOfParallelism: MAX_CONNECTIONS_PER_DOMAIN,
             cancellationToken: cancelToken);
+
+            string finishedLog = LoggerUtil.FormatLogByBuildSource(BuildSourceName, "Finished");
+            OutputLoggerAction(finishedLog);
         }
 
         /// <summary>
@@ -72,7 +61,25 @@ namespace WhatBuild.Core
         /// <param name="champion"></param>
         /// <param name="cancelToken"></param>
         /// <returns>True if successfully generated item set</returns>
-        private async Task<bool> GenerateItemSetByChampion(ChampionViewModel champion, CancellationToken cancelToken)
+        private async Task TryGenerateItemSetByChampion(ChampionViewModel champion, CancellationToken cancelToken)
+        {
+            try
+            {
+                await GenerateItemSetByChampion(champion, cancelToken);
+
+                string log = LoggerUtil.FormatLogByBuildSource(BuildSourceName, "Succefully downloaded item set", champion.Name);
+                OutputLoggerAction(log);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
+
+                string errLog = LoggerUtil.FormatLogByBuildSource(BuildSourceName, "Failed to download item set", champion.Name, e.Message);
+                OutputLoggerAction(errLog);
+            }
+        }
+
+        private async Task GenerateItemSetByChampion(ChampionViewModel champion, CancellationToken cancelToken)
         {
             // Create a unique instance of BuildSource to be thread safe
             // I'm afraid of having corruption with a shared "Document" property if I use a single shared instance
@@ -81,24 +88,23 @@ namespace WhatBuild.Core
 
             if (!buildSource.IsValidContent())
             {
-                return false;
+                throw new InvalidOperationException("Invalid content");
             }
 
             LoLItemSetViewModel itemSetViewModel = ItemSetUtil.CreateItemSetPerChampion(buildSource, champion, Configuration.ShowSkillsOrder);
 
-            if (itemSetViewModel != null)
+            if (itemSetViewModel == null)
             {
-                // Create Item set JSON file into LoL directory
-                string itemSetDir = LoLPathUtil.CreateItemSetDirectory(Configuration.LoLDirectory, champion.Name);
-
-                string itemSetFileName = ItemSetUtil.GetFormattedItemSetFileName(buildSource, Configuration.ApplicationPrefixName);
-                string itemSetAbsolutePath = Path.Combine(itemSetDir, itemSetFileName);
-
-                await FileUtil.CreateJsonFileAsync(itemSetAbsolutePath, itemSetViewModel, cancelToken);
-                return true;
+                throw new InvalidOperationException("LoLItemSetViewModel is null");
             }
 
-            return false;
+            // Create Item set JSON file into LoL directory
+            string itemSetDir = LoLPathUtil.CreateItemSetDirectory(Configuration.LoLDirectory, champion.Name);
+
+            string itemSetFileName = ItemSetUtil.GetFormattedItemSetFileName(buildSource, Configuration.ApplicationPrefixName);
+            string itemSetAbsolutePath = Path.Combine(itemSetDir, itemSetFileName);
+
+            await FileUtil.CreateJsonFileAsync(itemSetAbsolutePath, itemSetViewModel, cancelToken);
         }
     }
 }
