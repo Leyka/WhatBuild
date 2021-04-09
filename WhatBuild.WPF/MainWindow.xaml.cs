@@ -89,9 +89,11 @@ namespace WhatBuild.WPF
 
             Reset();
 
-            // UI toggle visibility
+            // Show progress UI
             grpMetadata.Visibility = Visibility.Collapsed;
             grpProgress.Visibility = Visibility.Visible;
+            pbProgress.Visibility = Visibility.Visible;
+
             ToggleUIImport();
 
             // Fetch configuration 
@@ -106,7 +108,7 @@ namespace WhatBuild.WPF
             // Start generation
             if (IsCheckedSourceOPGG)
             {
-                var opggGenerator = new ItemSetGenerator<OPGG>(config, Log);
+                var opggGenerator = new ItemSetGenerator<OPGG>(config, Log, UpdateProgressBar);
 
                 try
                 {
@@ -116,11 +118,12 @@ namespace WhatBuild.WPF
                 {
                     // Log that operation has been cancelled
                     Mouse.OverrideCursor = null;
-                    Log(LoggerUtil.FormatLogByBuildSource(opggGenerator.BuildSourceName, "Cancelled"));
+                    Log("Cancelled");
                 }
                 finally
                 {
                     ToggleUIImport();
+                    pbProgress.Value = 0;
                 }
             }
         }
@@ -128,6 +131,8 @@ namespace WhatBuild.WPF
         private void btnCancel_Click(object sender, RoutedEventArgs e)
         {
             CancelTokenSource.Cancel();
+
+            Log("Cancelling...");
             Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
         }
 
@@ -225,8 +230,22 @@ namespace WhatBuild.WPF
             });
         }
 
+        private void UpdateProgressBar(double progress)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                // Only update progress if value bigger due to threads race condition
+                if (progress > pbProgress.Value)
+                {
+                    pbProgress.Value = progress;
+                }
+            });
+        }
+
         private void Reset()
         {
+            CancelTokenSource = new CancellationTokenSource();
+
             tbLogs.Text = "";
         }
         #endregion

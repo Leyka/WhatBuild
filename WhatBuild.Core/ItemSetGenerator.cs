@@ -22,12 +22,14 @@ namespace WhatBuild.Core
         public ConfigurationViewModel Configuration { get; set; }
 
         private Action<string> OutputLoggerAction { get; set; }
+        private Action<double> UpdateProgressAction { get; set; }
 
-        public ItemSetGenerator(ConfigurationViewModel config, Action<string> logAction)
+        public ItemSetGenerator(ConfigurationViewModel config, Action<string> logAction, Action<double> updateProgressAction)
         {
             BuildSourceName = typeof(T).Name;
             Configuration = config;
             OutputLoggerAction = logAction;
+            UpdateProgressAction = updateProgressAction;
         }
 
         /// <summary>
@@ -44,9 +46,12 @@ namespace WhatBuild.Core
             OutputLoggerAction(startingLog);
 
             // Parallel downloads 
-            await champions.ParallelForEachAsync(async champion =>
+            await champions.ParallelForEachAsync(async (champion, index) =>
             {
                 await TryGenerateItemSetByChampion(champion, cancelToken);
+
+                double progress = (double)(index + 1) / champions.Count;
+                UpdateProgressAction(progress * 100);
             },
             maxDegreeOfParallelism: MAX_CONNECTIONS_PER_DOMAIN,
             cancellationToken: cancelToken);
