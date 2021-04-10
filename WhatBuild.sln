@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WhatBuild.Core", "WhatBuild
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WhatBuild.Tests", "WhatBuild.Tests\WhatBuild.Tests.csproj", "{2727FDFB-D881-41A9-8CEF-AA46765D7AD9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WhatBuild.WPF", "WhatBuild.WPF\WhatBuild.WPF.csproj", "{504F2746-2BBF-49B7-8A6D-A1C1BE3AC9F6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WhatBuild.WPF", "WhatBuild.WPF\WhatBuild.WPF.csproj", "{504F2746-2BBF-49B7-8A6D-A1C1BE3AC9F6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

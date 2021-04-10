@@ -23,8 +23,12 @@ namespace WhatBuild.WPF
     /// </summary>
     public partial class MainWindow : Window
     {
-        public CancellationTokenSource CancelTokenSource { get; set; }
+        private CancellationTokenSource CancelTokenSource { get; set; }
 
+        // Build sources
+        private IBuildSource OPGG { get; set; }
+
+        // Binded UI 
         public string AppVersion { get; } = Assembly.GetExecutingAssembly().GetName().Version.ToString();
         public bool IsCheckedRemoveOutdated { get; set; } = true;
         public bool IsCheckedShowSkillOrders { get; set; } = true;
@@ -66,6 +70,10 @@ namespace WhatBuild.WPF
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
             await ShowAllVersionsAsync();
+
+            // Check if new update
+            CheckToUpdateItemSets();
+
             Mouse.OverrideCursor = null;
         }
 
@@ -76,8 +84,10 @@ namespace WhatBuild.WPF
 
         private async void btnImport_Click(object sender, RoutedEventArgs e)
         {
-            // TODO: Validate path
-            string lolDirectory = Properties.Settings.Default.LoLDirectory;
+            if (!ValidateAndImportLoLPath())
+            {
+                return;
+            }
 
             Reset();
 
@@ -106,41 +116,25 @@ namespace WhatBuild.WPF
 
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
-            Reset();
+            if (!ValidateAndImportLoLPath())
+            {
+                return;
+            }
 
+            grpMetadata.Visibility = Visibility.Collapsed;
+            grpProgress.Visibility = Visibility.Visible;
+
+            Reset();
             DeleteItemSets();
+
+            // Update local item set to null
+            Properties.Settings.Default.LocalItemsVersion = null;
+            Properties.Settings.Default.Save();
         }
 
         private void txtLoLDirectory_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
-            // Ask user to browse League of Legends directory
-            var folderBrowserDialog = new FolderBrowserDialog();
-
-            DialogResult result = folderBrowserDialog.ShowDialog();
-
-            bool hasContent = result == System.Windows.Forms.DialogResult.OK
-                && !string.IsNullOrWhiteSpace(folderBrowserDialog.SelectedPath);
-
-            if (hasContent)
-            {
-                string path = folderBrowserDialog.SelectedPath;
-                txtLoLDirectory.Text = path;
-
-                // Validate path
-                bool isValidDirectory = LoLPathUtil.IsValidLeagueOfLegendsDirectory(path);
-                Properties.Settings.Default.LoLDirectory = path;
-
-                if (isValidDirectory)
-                {
-                    ChangeLoLStatusToFound();
-                }
-                else
-                {
-                    ChangeLoLStatusToNotFound();
-                }
-
-                Properties.Settings.Default.Save();
-            }
+            AskUserToImportLoLPath();
         }
 
         private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
@@ -157,9 +151,9 @@ namespace WhatBuild.WPF
         private async Task ShowAllVersionsAsync()
         {
             // TODO: Find better way to fetch version?
-            IBuildSource opgg = new OPGG();
+            OPGG = new OPGG();
             Task<LoLStore> taskLoLStore = StoreManager<LoLStore>.GetAsync();
-            Task taskInitOpgg = opgg.InitAsync("annie");
+            Task taskInitOpgg = OPGG.InitAsync("annie");
 
             await Task.WhenAll(taskLoLStore, taskInitOpgg);
 
@@ -171,7 +165,7 @@ namespace WhatBuild.WPF
             if (grpMetadata.Visibility == Visibility.Visible)
             {
                 lblLoLVersion.Content = $"LoL version: {taskLoLStore.Result.Version}";
-                lblOPGGVersion.Content = $"op.gg version: {opgg.GetVersion()}";
+                lblOPGGVersion.Content = $"op.gg version: {OPGG.GetVersion()}";
                 lblLocalItemsVersion.Content = $"Local items version: {localItemsVersion}";
             }
         }
@@ -195,6 +189,25 @@ namespace WhatBuild.WPF
             lblLoLDirectoryStatus.Content = "League of Legends not found";
             lblLoLDirectoryStatus.Foreground = Brushes.DarkRed;
         }
+
+        private void ShowInfoMessageBox(string title, string message)
+        {
+            System.Windows.Forms.MessageBox.Show(
+                message,
+                title,
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+        }
+
+        private DialogResult ShowWarningMessageBox(string title, string message)
+        {
+            return System.Windows.Forms.MessageBox.Show(
+                    message,
+                    title,
+                    MessageBoxButtons.OKCancel,
+                    MessageBoxIcon.Warning);
+        }
+
         #endregion
 
         #region Helpers
@@ -250,6 +263,12 @@ namespace WhatBuild.WPF
                 try
                 {
                     await opggGenerator.GenerateItemSetForAllChampionsAsync(CancelTokenSource.Token);
+
+                    // Update local version with OPGG version for now
+                    Properties.Settings.Default.LocalItemsVersion = OPGG.GetVersion();
+                    Properties.Settings.Default.Save();
+
+                    ShowInfoMessageBox("Import completed", "Your item sets have been successfully imported.");
                 }
                 catch (OperationCanceledException ex) when (ex.CancellationToken == CancelTokenSource.Token)
                 {
@@ -270,6 +289,82 @@ namespace WhatBuild.WPF
             CancelTokenSource = new CancellationTokenSource();
 
             tbLogs.Text = "";
+        }
+
+        private bool AskUserToImportLoLPath()
+        {
+            // Ask user to browse League of Legends directory
+            var folderBrowserDialog = new FolderBrowserDialog();
+
+            DialogResult result = folderBrowserDialog.ShowDialog();
+
+            bool hasContent = result == System.Windows.Forms.DialogResult.OK
+                && !string.IsNullOrWhiteSpace(folderBrowserDialog.SelectedPath);
+
+            if (hasContent)
+            {
+                string path = folderBrowserDialog.SelectedPath;
+                txtLoLDirectory.Text = path;
+
+                // Validate path
+                bool isValidDirectory = LoLPathUtil.IsValidLeagueOfLegendsDirectory(path);
+                Properties.Settings.Default.LoLDirectory = path;
+
+                if (isValidDirectory)
+                {
+                    ChangeLoLStatusToFound();
+                }
+                else
+                {
+                    ChangeLoLStatusToNotFound();
+                }
+
+                Properties.Settings.Default.Save();
+                return true;
+            }
+
+            // Cancelled or invalid 
+            return false;
+        }
+
+        private bool ValidateAndImportLoLPath()
+        {
+            while (!LoLPathUtil.IsValidLeagueOfLegendsDirectory(Properties.Settings.Default.LoLDirectory))
+            {
+                string errMsg = "Your League of Legends path seems invalid.\n";
+                errMsg += "Please set a valid path before proceeding.";
+
+                DialogResult result = ShowWarningMessageBox("Invalid PLeague of Legends Path", errMsg);
+
+                if (result == System.Windows.Forms.DialogResult.OK || result == System.Windows.Forms.DialogResult.Yes)
+                {
+                    bool importCompleted = AskUserToImportLoLPath();
+                    if (!importCompleted)
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private void CheckToUpdateItemSets()
+        {
+            // For now, only check for OPGG until we support more build sources
+            string opggVersion = OPGG.GetVersion();
+            string localVersion = Properties.Settings.Default.LocalItemsVersion;
+
+            bool shouldUpdate = VersionUtil.ShouldUpdateItemSet(opggVersion, localVersion);
+
+            if (shouldUpdate)
+            {
+                ShowInfoMessageBox("Outdated item sets", "Your item sets are outdated compared to current OP.GG version.");
+            }
         }
         #endregion
     }
