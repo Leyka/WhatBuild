@@ -30,7 +30,15 @@ namespace WhatBuild.WPF
         private IBuildSource OPGG { get; set; }
 
         // Binded UI 
-        public string AppVersion { get; } = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+        public string AppVersion
+        {
+            get
+            {
+                // Returns AssemblyInformationalVersion 
+                Assembly assembly = Assembly.GetEntryAssembly();
+                return FileVersionInfo.GetVersionInfo(assembly.Location).ProductVersion;
+            }
+        }
         public bool IsCheckedRemoveOutdated { get; set; } = true;
         public bool IsCheckedShowSkillOrders { get; set; } = true;
         public bool IsCheckedSourceOPGG { get; set; } = true;
