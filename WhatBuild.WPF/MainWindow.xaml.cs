@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Threading;
@@ -116,6 +117,8 @@ namespace WhatBuild.WPF
 
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
+            btnDelete.IsEnabled = false;
+
             if (!ValidateAndImportLoLPath())
             {
                 return;
@@ -130,6 +133,8 @@ namespace WhatBuild.WPF
             // Update local item set to null
             Properties.Settings.Default.LocalItemsVersion = null;
             Properties.Settings.Default.Save();
+
+            btnDelete.IsEnabled = true;
         }
 
         private void txtLoLDirectory_PreviewMouseDown(object sender, MouseButtonEventArgs e)
@@ -165,7 +170,7 @@ namespace WhatBuild.WPF
             if (grpMetadata.Visibility == Visibility.Visible)
             {
                 lblLoLVersion.Content = $"LoL version: {taskLoLStore.Result.Version}";
-                lblOPGGVersion.Content = $"op.gg version: {OPGG.GetVersion()}";
+                lblOPGGVersion.Content = $"OP.GG version: {OPGG.GetVersion()}";
                 lblLocalItemsVersion.Content = $"Local items version: {localItemsVersion}";
             }
         }
@@ -262,13 +267,20 @@ namespace WhatBuild.WPF
 
                 try
                 {
-                    await opggGenerator.GenerateItemSetForAllChampionsAsync(CancelTokenSource.Token);
+                    List<ChampionViewModel> failedChampions = await opggGenerator.GenerateItemSetForAllChampionsAsync(CancelTokenSource.Token);
 
                     // Update local version with OPGG version for now
                     Properties.Settings.Default.LocalItemsVersion = OPGG.GetVersion();
                     Properties.Settings.Default.Save();
 
-                    ShowInfoMessageBox("Import completed", "Your item sets have been successfully imported.");
+                    string msgInfoBox = "Your item sets have been imported.";
+                    if (failedChampions.Count > 0)
+                    {
+                        msgInfoBox += "\nHowever, these champions didn't do really well:";
+                        failedChampions.ForEach(champion => msgInfoBox += $"\n-> {champion.Name}");
+                    }
+
+                    ShowInfoMessageBox("Import completed", msgInfoBox);
                 }
                 catch (OperationCanceledException ex) when (ex.CancellationToken == CancelTokenSource.Token)
                 {

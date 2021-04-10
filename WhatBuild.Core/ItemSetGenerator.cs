@@ -37,8 +37,8 @@ namespace WhatBuild.Core
         /// Create a Item Set JSON file for all champions under LoL install path 
         /// </summary>
         /// <param name="cancelToken"></param>
-        /// <returns></returns>
-        public async Task GenerateItemSetForAllChampionsAsync(CancellationToken cancelToken = default)
+        /// <returns>List of failed champion item sets</returns>
+        public async Task<List<ChampionViewModel>> GenerateItemSetForAllChampionsAsync(CancellationToken cancelToken = default)
         {
             LoLStore loLStore = await StoreManager<LoLStore>.GetAsync();
             List<ChampionViewModel> champions = loLStore.Champions;
@@ -46,10 +46,18 @@ namespace WhatBuild.Core
             string startingLog = LoggerUtil.FormatLogByBuildSource(BuildSourceName, "Start downloading item sets...");
             LogHandler(startingLog);
 
+            // Store the failed champions to return later
+            List<ChampionViewModel> failedChampions = new List<ChampionViewModel>();
+
             // Parallel downloads 
             await champions.ParallelForEachAsync(async (champion, index) =>
             {
-                await TryGenerateItemSetByChampion(champion, cancelToken);
+                bool success = await TryGenerateItemSetByChampion(champion, cancelToken);
+
+                if (!success)
+                {
+                    failedChampions.Add(champion);
+                }
 
                 double progress = (double)(index + 1) / champions.Count;
                 UpdateProgressHandler(progress * 100);
@@ -57,8 +65,9 @@ namespace WhatBuild.Core
             maxDegreeOfParallelism: MAX_CONNECTIONS_PER_DOMAIN,
             cancellationToken: cancelToken);
 
-            string finishedLog = LoggerUtil.FormatLogByBuildSource(BuildSourceName, "Finished");
-            LogHandler(finishedLog);
+            LogHandler(LoggerUtil.FormatLogByBuildSource(BuildSourceName, "Finished"));
+
+            return failedChampions;
         }
 
         /// <summary>
@@ -67,7 +76,7 @@ namespace WhatBuild.Core
         /// <param name="champion"></param>
         /// <param name="cancelToken"></param>
         /// <returns>True if successfully generated item set</returns>
-        private async Task TryGenerateItemSetByChampion(ChampionViewModel champion, CancellationToken cancelToken)
+        private async Task<bool> TryGenerateItemSetByChampion(ChampionViewModel champion, CancellationToken cancelToken)
         {
             try
             {
@@ -75,6 +84,8 @@ namespace WhatBuild.Core
 
                 string log = LoggerUtil.FormatLogByBuildSource(BuildSourceName, "Succefully downloaded item set", champion.Name);
                 LogHandler(log);
+
+                return true;
             }
             catch (Exception e)
             {
@@ -82,6 +93,8 @@ namespace WhatBuild.Core
 
                 string errLog = LoggerUtil.FormatLogByBuildSource(BuildSourceName, "Failed to download item set", champion.Name, e.Message);
                 LogHandler(errLog);
+
+                return false;
             }
         }
 
