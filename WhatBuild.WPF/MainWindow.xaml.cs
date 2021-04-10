@@ -89,6 +89,11 @@ namespace WhatBuild.WPF
 
             Reset();
 
+            if (IsCheckedRemoveOutdated)
+            {
+                DeleteItemSets();
+            }
+
             // Show progress UI
             grpMetadata.Visibility = Visibility.Collapsed;
             grpProgress.Visibility = Visibility.Visible;
@@ -96,36 +101,7 @@ namespace WhatBuild.WPF
 
             ToggleUIImport();
 
-            // Fetch configuration 
-            var config = new ConfigurationViewModel
-            {
-                ApplicationPrefixName = Properties.Settings.Default.AppPrefixName,
-                LoLDirectory = lolDirectory,
-                RemoveOutdatedItems = IsCheckedRemoveOutdated,
-                ShowSkillsOrder = IsCheckedShowSkillOrders
-            };
-
-            // Start generation
-            if (IsCheckedSourceOPGG)
-            {
-                var opggGenerator = new ItemSetGenerator<OPGG>(config, Log, UpdateProgressBar);
-
-                try
-                {
-                    await opggGenerator.GenerateItemSetForAllChampionsAsync(CancelTokenSource.Token);
-                }
-                catch (OperationCanceledException ex) when (ex.CancellationToken == CancelTokenSource.Token)
-                {
-                    // Log that operation has been cancelled
-                    Mouse.OverrideCursor = null;
-                    Log("Cancelled");
-                }
-                finally
-                {
-                    ToggleUIImport();
-                    pbProgress.Value = 0;
-                }
-            }
+            await ImportItemSetsAsync();
         }
 
         private void btnCancel_Click(object sender, RoutedEventArgs e)
@@ -134,6 +110,13 @@ namespace WhatBuild.WPF
 
             Log("Cancelling...");
             Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
+        }
+
+        private void btnDelete_Click(object sender, RoutedEventArgs e)
+        {
+            Reset();
+
+            DeleteItemSets();
         }
 
         private void txtLoLDirectory_PreviewMouseDown(object sender, MouseButtonEventArgs e)
@@ -178,7 +161,7 @@ namespace WhatBuild.WPF
             e.Handled = true;
         }
 
-        #region Helpers
+        #region UI Helpers
         private async Task ShowAllVersionsAsync()
         {
             // TODO: Find better way to fetch version?
@@ -220,7 +203,9 @@ namespace WhatBuild.WPF
             lblLoLDirectoryStatus.Content = "League of Legends not found";
             lblLoLDirectoryStatus.Foreground = Brushes.DarkRed;
         }
+        #endregion
 
+        #region Helpers
         private void Log(string message)
         {
             Dispatcher.Invoke(() =>
@@ -240,6 +225,52 @@ namespace WhatBuild.WPF
                     pbProgress.Value = progress;
                 }
             });
+        }
+
+        private void DeleteItemSets()
+        {
+            Log("Deleting existing item sets...");
+
+            string appPrefix = Properties.Settings.Default.AppPrefixName;
+            string lolDirectory = Properties.Settings.Default.LoLDirectory;
+            LoLPathUtil.DeleteItemSets(lolDirectory, appPrefix);
+
+            Log("Finished deleting!");
+        }
+
+        private async Task ImportItemSetsAsync()
+        {
+
+            // Fetch configuration 
+            var config = new ConfigurationViewModel
+            {
+                ApplicationPrefixName = Properties.Settings.Default.AppPrefixName,
+                LoLDirectory = Properties.Settings.Default.LoLDirectory,
+                RemoveOutdatedItems = IsCheckedRemoveOutdated,
+                ShowSkillsOrder = IsCheckedShowSkillOrders
+            };
+
+            // Start generation
+            if (IsCheckedSourceOPGG)
+            {
+                var opggGenerator = new ItemSetGenerator<OPGG>(config, Log, UpdateProgressBar);
+
+                try
+                {
+                    await opggGenerator.GenerateItemSetForAllChampionsAsync(CancelTokenSource.Token);
+                }
+                catch (OperationCanceledException ex) when (ex.CancellationToken == CancelTokenSource.Token)
+                {
+                    // Log that operation has been cancelled
+                    Mouse.OverrideCursor = null;
+                    Log("Cancelled");
+                }
+                finally
+                {
+                    ToggleUIImport();
+                    pbProgress.Value = 0;
+                }
+            }
         }
 
         private void Reset()

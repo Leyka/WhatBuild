@@ -28,5 +28,21 @@ namespace WhatBuild.Core.Utils
 
             return championItemSetPath;
         }
+
+        public static void DeleteItemSets(string lolInstallPath, string appPrefix)
+        {
+            // Deletes all item sets under {LOL}/Config/Champions/{ChampionName}/Recommended/WB_*.json
+            string championsDirectoryPath = Path.Combine(lolInstallPath, "Config", "Champions");
+
+            foreach (string championDirectory in Directory.EnumerateDirectories(championsDirectoryPath))
+            {
+                string recommendedItemSetPath = Path.Join(championDirectory, "Recommended");
+
+                foreach (string itemSetFile in Directory.EnumerateFiles(recommendedItemSetPath, $"{appPrefix}_*.json"))
+                {
+                    File.Delete(itemSetFile);
+                }
+            }
+        }
     }
 }

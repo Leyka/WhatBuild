@@ -21,15 +21,16 @@ namespace WhatBuild.Core
 
         public ConfigurationViewModel Configuration { get; set; }
 
-        private Action<string> OutputLoggerAction { get; set; }
-        private Action<double> UpdateProgressAction { get; set; }
+        private Action<string> LogHandler { get; set; }
 
-        public ItemSetGenerator(ConfigurationViewModel config, Action<string> logAction, Action<double> updateProgressAction)
+        private Action<double> UpdateProgressHandler { get; set; }
+
+        public ItemSetGenerator(ConfigurationViewModel config, Action<string> logHandler, Action<double> updateProgressHandler)
         {
             BuildSourceName = typeof(T).Name;
             Configuration = config;
-            OutputLoggerAction = logAction;
-            UpdateProgressAction = updateProgressAction;
+            LogHandler = logHandler;
+            UpdateProgressHandler = updateProgressHandler;
         }
 
         /// <summary>
@@ -43,7 +44,7 @@ namespace WhatBuild.Core
             List<ChampionViewModel> champions = loLStore.Champions;
 
             string startingLog = LoggerUtil.FormatLogByBuildSource(BuildSourceName, "Start downloading item sets...");
-            OutputLoggerAction(startingLog);
+            LogHandler(startingLog);
 
             // Parallel downloads 
             await champions.ParallelForEachAsync(async (champion, index) =>
@@ -51,13 +52,13 @@ namespace WhatBuild.Core
                 await TryGenerateItemSetByChampion(champion, cancelToken);
 
                 double progress = (double)(index + 1) / champions.Count;
-                UpdateProgressAction(progress * 100);
+                UpdateProgressHandler(progress * 100);
             },
             maxDegreeOfParallelism: MAX_CONNECTIONS_PER_DOMAIN,
             cancellationToken: cancelToken);
 
             string finishedLog = LoggerUtil.FormatLogByBuildSource(BuildSourceName, "Finished");
-            OutputLoggerAction(finishedLog);
+            LogHandler(finishedLog);
         }
 
         /// <summary>
@@ -73,14 +74,14 @@ namespace WhatBuild.Core
                 await GenerateItemSetByChampion(champion, cancelToken);
 
                 string log = LoggerUtil.FormatLogByBuildSource(BuildSourceName, "Succefully downloaded item set", champion.Name);
-                OutputLoggerAction(log);
+                LogHandler(log);
             }
             catch (Exception e)
             {
                 Debug.WriteLine(e);
 
                 string errLog = LoggerUtil.FormatLogByBuildSource(BuildSourceName, "Failed to download item set", champion.Name, e.Message);
-                OutputLoggerAction(errLog);
+                LogHandler(errLog);
             }
         }
 
