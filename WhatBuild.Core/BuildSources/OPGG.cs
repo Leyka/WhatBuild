@@ -38,16 +38,6 @@ namespace WhatBuild.Core.BuildSources
             }
         }
 
-        private string GetUrlBasedOnMode(LoLMode mode, string championName)
-        {
-            return mode switch
-            {
-                LoLMode.Classic => $"https://www.op.gg/champion/{championName}",
-                LoLMode.ARAM => $"https://na.op.gg/aram/{championName}/statistics",
-                _ => throw new NotSupportedException()
-            };
-        }
-
         public async Task InitAsync(string championName, LoLMode mode = LoLMode.Classic)
         {
             Task<HtmlDocument> fetchHtmlTask = FetchHtmlAsync(championName, mode);
@@ -59,13 +49,23 @@ namespace WhatBuild.Core.BuildSources
             Selector = fetchSelectorTask.Result;
         }
 
+        private string GetUrl(LoLMode mode, string championName)
+        {
+            return mode switch
+            {
+                LoLMode.Classic => $"https://www.op.gg/champion/{championName}",
+                LoLMode.ARAM => $"https://na.op.gg/aram/{championName}/statistics",
+                _ => throw new NotSupportedException()
+            };
+        }
+
         private Task<HtmlDocument> FetchHtmlAsync(string championName, LoLMode mode)
         {
             HtmlWeb web = new HtmlWeb();
 
             // TODO/v2: Handle multiple positions
             // Right now, 1 document is assigned to one champion per popular position
-            string championUrl = GetUrlBasedOnMode(mode, championName);
+            string championUrl = GetUrl(mode, championName);
             return web.LoadFromWebAsync(championUrl);
         }
 
