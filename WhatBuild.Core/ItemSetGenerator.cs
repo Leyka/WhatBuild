@@ -6,6 +6,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using WhatBuild.Core.Enums;
 using WhatBuild.Core.Interfaces;
 using WhatBuild.Core.Stores;
 using WhatBuild.Core.Utils;
@@ -78,11 +79,27 @@ namespace WhatBuild.Core
         /// <returns>True if successfully generated item set</returns>
         private async Task<bool> TryGenerateItemSetByChampion(ChampionViewModel champion, CancellationToken cancelToken)
         {
+            List<Task> tasks = new List<Task>();
+
             try
             {
-                await GenerateItemSetByChampion(champion, cancelToken);
+                // Mode = classic
+                Task generateItemSetClassic = GenerateItemSetByChampion(champion, LoLMode.Classic, cancelToken);
+                tasks.Add(generateItemSetClassic);
 
-                string log = LoggerUtil.FormatLogByBuildSource(BuildSourceName, "Succefully downloaded item set", champion.Name);
+                // Mode = aram (?)
+                if (Configuration.DownloadAramBuilds)
+                {
+                    Task generateItemSetAram = GenerateItemSetByChampion(champion, LoLMode.ARAM, cancelToken);
+                    tasks.Add(generateItemSetAram);
+                }
+
+                await Task.WhenAll(tasks);
+
+                // Log success
+                string successMessage = "Succefully downloaded item set";
+                if (Configuration.DownloadAramBuilds) successMessage += " + ARAM";
+                string log = LoggerUtil.FormatLogByBuildSource(BuildSourceName, successMessage, champion.Name);
                 LogHandler(log);
 
                 return true;
@@ -98,19 +115,19 @@ namespace WhatBuild.Core
             }
         }
 
-        private async Task GenerateItemSetByChampion(ChampionViewModel champion, CancellationToken cancelToken)
+        private async Task GenerateItemSetByChampion(ChampionViewModel champion, LoLMode mode, CancellationToken cancelToken)
         {
             // Create a unique instance of BuildSource to be thread safe
             // I'm afraid of having corruption with a shared "Document" property if I use a single shared instance
             IBuildSource buildSource = (T)Activator.CreateInstance(typeof(T));
-            await buildSource.InitAsync(champion.Name);
+            await buildSource.InitAsync(champion.Name, mode);
 
             if (!buildSource.IsValidContent())
             {
                 throw new InvalidOperationException("Invalid content");
             }
 
-            LoLItemSetViewModel itemSetViewModel = ItemSetUtil.CreateItemSetPerChampion(buildSource, champion, Configuration.ShowSkillsOrder);
+            LoLItemSetViewModel itemSetViewModel = ItemSetUtil.CreateItemSetPerChampion(buildSource, champion, mode, Configuration.ShowSkillsOrder);
 
             if (itemSetViewModel == null)
             {
@@ -120,7 +137,7 @@ namespace WhatBuild.Core
             // Create Item set JSON file into LoL directory
             string itemSetDir = LoLPathUtil.CreateItemSetDirectory(Configuration.LoLDirectory, champion.Name);
 
-            string itemSetFileName = ItemSetUtil.GetFormattedItemSetFileName(buildSource, Configuration.ApplicationPrefixName);
+            string itemSetFileName = ItemSetUtil.GetFormattedItemSetFileName(buildSource, mode, Configuration.ApplicationPrefixName);
             string itemSetAbsolutePath = Path.Combine(itemSetDir, itemSetFileName);
 
             await FileUtil.CreateJsonFileAsync(itemSetAbsolutePath, itemSetViewModel, cancelToken);

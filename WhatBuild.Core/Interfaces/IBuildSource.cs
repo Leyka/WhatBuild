@@ -8,7 +8,7 @@ namespace WhatBuild.Core.Interfaces
 {
     public interface IBuildSource
     {
-        Task InitAsync(string championName);
+        Task InitAsync(string championName, LoLMode mode = LoLMode.Classic);
 
         bool IsValidContent();
 

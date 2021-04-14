@@ -80,5 +80,14 @@ namespace WhatBuild.Tests.BuildSources
 
             Assert.Null(items);
         }
+
+        [Fact]
+        public async Task GetStarterItemIds_Aram_IsValid()
+        {
+            await opggClient.InitAsync("annie", LoLMode.ARAM);
+            List<int> items = opggClient.GetStarterItemIds();
+
+            Assert.True(items?.Count > 0);
+        }
     }
 }

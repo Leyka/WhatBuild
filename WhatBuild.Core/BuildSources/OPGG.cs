@@ -20,8 +20,6 @@ namespace WhatBuild.Core.BuildSources
     /// <see cref="https://op.gg"/>
     public class OPGG : IBuildSource
     {
-        private readonly string _baseUrl = "https://www.op.gg/champion/";
-
         private HtmlDocument Document { get; set; }
 
         private SelectorViewModel Selector { get; set; }
@@ -40,9 +38,19 @@ namespace WhatBuild.Core.BuildSources
             }
         }
 
-        public async Task InitAsync(string championName)
+        private string GetUrlBasedOnMode(LoLMode mode, string championName)
         {
-            Task<HtmlDocument> fetchHtmlTask = FetchHtmlAsync(championName);
+            return mode switch
+            {
+                LoLMode.Classic => $"https://www.op.gg/champion/{championName}",
+                LoLMode.ARAM => $"https://na.op.gg/aram/{championName}/statistics",
+                _ => throw new NotSupportedException()
+            };
+        }
+
+        public async Task InitAsync(string championName, LoLMode mode = LoLMode.Classic)
+        {
+            Task<HtmlDocument> fetchHtmlTask = FetchHtmlAsync(championName, mode);
             Task<SelectorViewModel> fetchSelectorTask = FetchSelectorDataAsync();
 
             await Task.WhenAll(fetchHtmlTask, fetchSelectorTask);
@@ -51,14 +59,13 @@ namespace WhatBuild.Core.BuildSources
             Selector = fetchSelectorTask.Result;
         }
 
-        private Task<HtmlDocument> FetchHtmlAsync(string championName)
+        private Task<HtmlDocument> FetchHtmlAsync(string championName, LoLMode mode)
         {
-            string championUrl = _baseUrl + championName;
-
             HtmlWeb web = new HtmlWeb();
 
             // TODO/v2: Handle multiple positions
             // Right now, 1 document is assigned to one champion per popular position
+            string championUrl = GetUrlBasedOnMode(mode, championName);
             return web.LoadFromWebAsync(championUrl);
         }
 
