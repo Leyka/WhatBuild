@@ -17,5 +17,7 @@ namespace WhatBuild.Core.ViewModels
         public bool RemoveOutdatedItems { get; set; }
 
         public bool ShowSkillsOrder { get; set; }
+
+        public bool DownloadAramBuilds { get; set; }
     }
 }

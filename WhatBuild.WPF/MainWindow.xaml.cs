@@ -42,6 +42,7 @@ namespace WhatBuild.WPF
         public bool IsCheckedRemoveOutdated { get; set; } = true;
         public bool IsCheckedShowSkillOrders { get; set; } = true;
         public bool IsCheckedSourceOPGG { get; set; } = true;
+        public bool IsCheckedDownloadAramBuilds { get; set; } = true;
 
         public MainWindow()
         {
@@ -265,7 +266,8 @@ namespace WhatBuild.WPF
                 ApplicationPrefixName = Properties.Settings.Default.AppPrefixName,
                 LoLDirectory = Properties.Settings.Default.LoLDirectory,
                 RemoveOutdatedItems = IsCheckedRemoveOutdated,
-                ShowSkillsOrder = IsCheckedShowSkillOrders
+                ShowSkillsOrder = IsCheckedShowSkillOrders,
+                DownloadAramBuilds = IsCheckedDownloadAramBuilds
             };
 
             // Start generation
