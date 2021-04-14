@@ -14,22 +14,22 @@
             <GroupBox Padding="5" Header="League of Legends Directory" >
                 <StackPanel>
                     <TextBox x:Name="txtLoLDirectory" Height="26" IsReadOnly="True" PreviewMouseDown="txtLoLDirectory_PreviewMouseDown" Cursor="Hand" />
-                    <Label x:Name="lblLoLDirectoryStatus" HorizontalAlignment="Center" />
+                    <Label x:Name="lblLoLDirectoryStatus" HorizontalAlignment="Center" Margin="0,5,0,0" />
                 </StackPanel>
             </GroupBox>
         </Grid>
         <Grid Height="469" VerticalAlignment="Top" Margin="5,110,5,0">
-            <GroupBox Padding="5" Header="Build Sources" Margin="0,-4,0,371" >
+            <GroupBox Padding="5" Header="Build Sources" Margin="0,-4,0,410" >
                 <StackPanel>
                     <CheckBox x:Name="chkSourceOpgg" Margin="5" IsChecked="{Binding IsCheckedSourceOPGG}" IsEnabled="False">OP.GG</CheckBox>
                 </StackPanel>
             </GroupBox>
-            <GroupBox Padding="5" Header="Item Sets" Margin="0,103,0,220">
+            <GroupBox Padding="5" Header="Item Sets" Margin="0,64,0,253">
                 <StackPanel>
                     <CheckBox x:Name="chkRemoveOutdatedItems" HorizontalAlignment="Left" VerticalAlignment="Top" IsChecked="{Binding IsCheckedRemoveOutdated}" Margin="5" Content="Remove outdated item sets"/>
                     <CheckBox x:Name="chkShowSkillOrders" HorizontalAlignment="Left" VerticalAlignment="Top" IsChecked="{Binding IsCheckedShowSkillOrders}" Margin="5" Content="Show skills order"/>
-                    <CheckBox x:Name="chkDownloadAramBuilds" HorizontalAlignment="Left" VerticalAlignment="Top" IsChecked="{Binding IsCheckedDownloadAramBuilds}" Margin="5" Content="Download Aram builds"/>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0" VerticalAlignment="Bottom">
+                    <CheckBox x:Name="chkDownloadAramBuilds" HorizontalAlignment="Left" VerticalAlignment="Top" IsChecked="{Binding IsCheckedDownloadAramBuilds}" Margin="5" Content="Download ARAM builds"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0" VerticalAlignment="Bottom">
                         <Button x:Name="btnCancel" Width="100" Height="30" FontWeight="Bold" Cursor="Hand" Visibility="Collapsed" Click="btnCancel_Click" Background="#FFE29232">
                             Cancel
                         </Button>
@@ -42,21 +42,21 @@
                     </StackPanel>
                 </StackPanel>
             </GroupBox>
-            <GroupBox x:Name="grpMetadata" Header="Metadata" VerticalAlignment="Top" Height="170" Margin="0,254,0,0" d:IsHidden="True">
+            <GroupBox x:Name="grpMetadata" Header="Metadata" VerticalAlignment="Top" Height="203" Margin="0,221,0,0" d:IsHidden="True">
                 <StackPanel Margin="5">
                     <Label x:Name="lblLoLVersion">Loading...</Label>
                     <Label x:Name="lblOPGGVersion"></Label>
                     <Label x:Name="lblLocalItemsVersion"></Label>
                 </StackPanel>
             </GroupBox>
-            <GroupBox x:Name="grpProgress" Header="Output" VerticalAlignment="Top" Height="137" Margin="0,254,0,0"  Visibility="Collapsed" d:IsHidden="True">
+            <GroupBox x:Name="grpProgress" Header="Output" VerticalAlignment="Top" Height="170" Margin="0,221,0,0"  Visibility="Collapsed">
                 <ScrollViewer x:Name="svLogs" VerticalScrollBarVisibility="Auto" Margin="5" >
-                    <TextBlock x:Name="tbLogs" FontFamily="Consolas" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="tbLogs" FontFamily="Consolas" TextWrapping="Wrap" d:IsHidden="True"/>
                 </ScrollViewer>
             </GroupBox>
-            <ProgressBar x:Name="pbProgress" Height="20" Margin="0,396,0,53"  Visibility="Collapsed"/>
+            <ProgressBar x:Name="pbProgress" Height="20" Margin="0,396,0,53"  Visibility="Collapsed" d:IsHidden="True"/>
         </Grid>
-        <Grid VerticalAlignment="Top" Height="24" Margin="0,538,0,0" >
+        <Grid VerticalAlignment="Top" Height="24" Margin="0,538,0,0" d:IsLocked="True" d:IsHidden="True" >
             <Label HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="11">
                 <Hyperlink NavigateUri="https://github.com/Leyka/WhatBuild" RequestNavigate="Hyperlink_RequestNavigate">
                     Github
