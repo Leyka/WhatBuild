@@ -9,20 +9,20 @@ Download latest League of Legends builds from [OP.GG](https://na.op.gg/champion/
 
 ## Download 
 
-* Windows: [Link](https://github.com/Leyka/WhatBuild/releases/tag/latest)
+* Windows: [Link](https://github.com/Leyka/WhatBuild/releases/download/latest/WhatBuild.zip)
 
 ## Usage
 
 1. Unzip and run `WhatBuild.exe`
-2. Browse League of Legends location (if it's not already installed under C:\Riot Games\League of Legends )
-3. Click on **Import** and wait for the builds to download
+2. Browse League of Legends location (if it's not already installed under C:\Riot Games\League of Legends)
+3. Click **Import** and wait for the builds to download
 4. That's it!
 
 ---
 
 ## Example
 
-Once you are in a game, open shop and click on **ITEM SETS** tab. 
+Once you are in a game, open the shop and click **ITEM SETS** tab. 
 
 You will find the build orders for your champion usually seperated in 3 categories: Starter, Core and Boots.
 
@@ -31,7 +31,9 @@ You will find the build orders for your champion usually seperated in 3 categori
 ## TODO
 
 * [ ] OP.GG : Support multiple champion positions
-* [ ] Add proper testing for Aram builds
+* [ ] Aram: Add proper tests
+* [ ] Support other sources (U.gg, etc)
+* [ ] MacOS Support?
 
 ## Credits
 
