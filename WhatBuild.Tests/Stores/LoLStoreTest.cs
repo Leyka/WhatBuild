@@ -16,8 +16,8 @@ namespace WhatBuild.Tests.Stores
 
             Assert.NotNull(lolStore.BaseUrlAPI);
             Assert.NotNull(lolStore.Version);
+
             Assert.True(lolStore.Champions.Count > 0);
-            Assert.True(lolStore.Items.Count > 0);
         }
     }
 }

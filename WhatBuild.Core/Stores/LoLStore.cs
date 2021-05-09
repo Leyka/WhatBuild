@@ -22,17 +22,11 @@ namespace WhatBuild.Core.Stores
         {
             // 1- Fetch metadata
             LoLMetadataViewModel metadata = await LoLAPIUtil.FetchAPIMetadataAsync();
-
             BaseUrlAPI = metadata.BaseUrlAPI;
             Version = metadata.Version;
 
-            // 2- Fetch champions and items
-            var fetchChampionsTask = LoLAPIUtil.FetchAllChampionsAsync(BaseUrlAPI, Version);
-            var fetchItemsTask = LoLAPIUtil.FetchAllItemAsync(BaseUrlAPI, Version);
-            await Task.WhenAll(fetchChampionsTask, fetchItemsTask);
-
-            Champions = fetchChampionsTask.Result;
-            Items = fetchItemsTask.Result;
+            // 2- Fetch all champions data
+            Champions = await LoLAPIUtil.FetchAllChampionsAsync(BaseUrlAPI, Version);
         }
     }
 }

@@ -92,29 +92,5 @@ namespace WhatBuild.Core.Utils
                 championToFix.Name = championAlias.Value;
             }
         }
-
-        public static async Task<List<ItemViewModel>> FetchAllItemAsync(string apiUrl, string version)
-        {
-            string data = await FetchDataByTypeAsync(apiUrl, version, "item");
-
-            Dictionary<int, ItemViewModel> dictItems =
-                JsonConvert.DeserializeObject<Dictionary<int, ItemViewModel>>(data);
-
-            if (dictItems?.Count == 0)
-            {
-                throw new NullReferenceException("No items found, check that the API is valid");
-            }
-
-            List<ItemViewModel> itemsWithId = dictItems.Values
-                .Select((itemViewModel, index) =>
-                {
-                    // The API store the item ID only as "key" => Manually bind "id" to view model
-                    itemViewModel.Id = dictItems.Keys.ElementAt(index);
-                    return itemViewModel;
-                })
-                .ToList();
-
-            return itemsWithId;
-        }
     }
 }

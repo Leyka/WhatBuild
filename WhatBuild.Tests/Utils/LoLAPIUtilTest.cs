@@ -67,18 +67,5 @@ namespace WhatBuild.Tests.Utils
             Assert.DoesNotContain(champions, champion => champion.Name == "MonkeyKing");
             Assert.Contains(champions, champion => champion.Name == "Wukong");
         }
-
-        [Fact]
-        public async Task FetchAllItemsIds_ItemId_ReturnsAllItemsWithValidIds()
-        {
-            LoLMetadataViewModel metadata = await LoLAPIUtil.FetchAPIMetadataAsync();
-
-            List<ItemViewModel> items = await LoLAPIUtil.FetchAllItemAsync(metadata.BaseUrlAPI, metadata.Version);
-
-            Assert.True(items.Count > 0);
-
-            // Ensure that we have ID > 0, test with the first element
-            Assert.True(items[0].Id > 0);
-        }
     }
 }
