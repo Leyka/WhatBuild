@@ -8,7 +8,7 @@ namespace WhatBuild.Core.Enums
     {
         Top,
         Jungle,
-        Middle,
+        Mid,
         Adc,
         Support
     }
