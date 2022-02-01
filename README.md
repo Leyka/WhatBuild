@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="Doc/Images/sword.ico" width="100" alt="logo sword"/>
+</div>
+
 # WhatBuild
 
 Download latest League of Legends builds from [OP.GG](https://na.op.gg/champion/statistics)
