@@ -12,6 +12,10 @@ namespace WhatBuild.Core.Interfaces
 
         bool IsValidContent();
 
+        string GetVersion();
+
+        string GetSourceName();
+
         ChampionPosition GetChampionPosition();
 
         string GetFormattedSkills();

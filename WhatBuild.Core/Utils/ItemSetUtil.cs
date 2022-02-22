@@ -15,33 +15,33 @@ namespace WhatBuild.Core.Utils
         /// </summary>
         /// <param name="source"></param>
         /// <returns></returns>
-        public static string GetFormattedItemSetFileName(IBuildSource source, IMetadata metadata, LoLMode mode, string appPrefix)
+        public static string GetFormattedItemSetFileName(IBuildSource source, LoLMode mode, string appPrefix)
         {
-            string sourceName = metadata.GetSourceName();
-            string sourceVersion = metadata.GetVersion();
+            string sourceName = source.GetSourceName();
+            string sourceVersion = source.GetVersion();
             // Either show champion position as info, or LoL mode if not classic
             string championInfo = LoLModeUtil.FormatChampionInfoByMode(source, mode);
 
             return $"{appPrefix}_{sourceName}v{sourceVersion}_{championInfo}.json";
         }
 
-        public static LoLItemSetViewModel CreateItemSetPerChampion(IBuildSource source, IMetadata metadata, ChampionViewModel champion, LoLMode mode, bool showSkillsOrder)
+        public static LoLItemSetViewModel CreateItemSetPerChampion(IBuildSource source, ChampionViewModel champion, LoLMode mode, bool showSkillsOrder)
         {
             return new LoLItemSetViewModel()
             {
-                Title = GetPageTitle(source, metadata, mode, champion),
+                Title = GetPageTitle(source, mode, champion),
                 Map = LoLModeUtil.GetMapNameByMode(mode),
                 AssociatedChampions = new List<int> { champion.Id },
                 Blocks = CreateBlockItems(source, showSkillsOrder)
             };
         }
 
-        private static string GetPageTitle(IBuildSource source, IMetadata metadata, LoLMode mode, ChampionViewModel champion)
+        private static string GetPageTitle(IBuildSource source, LoLMode mode, ChampionViewModel champion)
         {
-            string sourceName = metadata.GetSourceName();
-            string sourceVersion = metadata.GetVersion();
+            string sourceName = source.GetSourceName();
             string championName = champion.Name;
             string championInfo = LoLModeUtil.FormatChampionInfoByMode(source, mode);
+            string sourceVersion = source.GetVersion();
 
             // Example for classic mode: OPGG - Annie Middle - v11.07 
             // Example for ARAM mode: OPGG - Annie ARAM - v11.07 

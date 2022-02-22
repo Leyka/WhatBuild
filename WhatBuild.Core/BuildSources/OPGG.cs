@@ -87,6 +87,21 @@ namespace WhatBuild.Core.BuildSources
             return !pageContent.ToLower().Contains(notValidText);
         }
 
+        public string GetSourceName()
+        {
+            return "OP.GG";
+        }
+
+        public string GetVersion()
+        {
+            HtmlNode nodeVersion = Document.DocumentNode.SelectSingleNode(Selector.Version);
+            string version = nodeVersion.InnerText.Split(':').Last();
+
+            // Clean string with \t and \n
+            version = StringUtil.CleanString(version);
+            return version;
+        }
+
         #region Positions
         public ChampionPosition GetChampionPosition()
         {

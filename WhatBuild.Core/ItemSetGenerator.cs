@@ -18,7 +18,7 @@ namespace WhatBuild.Core
     {
         private const int MAX_CONNECTIONS_PER_DOMAIN = 6;
 
-        public IMetadata BuildSourceMetadata { get; }
+        public string BuildSourceName { get; }
 
         public ConfigurationViewModel Configuration { get; set; }
 
@@ -26,10 +26,10 @@ namespace WhatBuild.Core
 
         private Action<double> UpdateProgressHandler { get; set; }
 
-        public ItemSetGenerator(ConfigurationViewModel config, IMetadata buildSourceMetadata, Action<string> logHandler, Action<double> updateProgressHandler)
+        public ItemSetGenerator(ConfigurationViewModel config, Action<string> logHandler, Action<double> updateProgressHandler)
         {
+            BuildSourceName = typeof(T).Name;
             Configuration = config;
-            BuildSourceMetadata = buildSourceMetadata;
             LogHandler = logHandler;
             UpdateProgressHandler = updateProgressHandler;
         }
@@ -44,8 +44,7 @@ namespace WhatBuild.Core
             LoLStore loLStore = await StoreManager<LoLStore>.GetAsync();
             List<ChampionViewModel> champions = loLStore.Champions;
 
-            string buildSourceName = BuildSourceMetadata.GetSourceName();
-            string startingLog = LoggerUtil.FormatLogByBuildSource(buildSourceName, "Start downloading item sets...");
+            string startingLog = LoggerUtil.FormatLogByBuildSource(BuildSourceName, "Start downloading item sets...");
             LogHandler(startingLog);
 
             // Store the failed champions to return later
@@ -67,7 +66,7 @@ namespace WhatBuild.Core
             maxDegreeOfParallelism: MAX_CONNECTIONS_PER_DOMAIN,
             cancellationToken: cancelToken);
 
-            LogHandler(LoggerUtil.FormatLogByBuildSource(buildSourceName, "Finished"));
+            LogHandler(LoggerUtil.FormatLogByBuildSource(BuildSourceName, "Finished"));
 
             return failedChampions;
         }
@@ -80,8 +79,6 @@ namespace WhatBuild.Core
         /// <returns>True if successfully generated item set</returns>
         private async Task<bool> TryGenerateItemSetByChampion(ChampionViewModel champion, CancellationToken cancelToken)
         {
-            string buildSourceName = BuildSourceMetadata.GetSourceName();
-
             List<Task> tasks = new List<Task>();
 
             try
@@ -102,7 +99,7 @@ namespace WhatBuild.Core
                 // Log success
                 string successMessage = "Succefully downloaded item set";
                 if (Configuration.DownloadAramBuilds) successMessage += " + ARAM";
-                string log = LoggerUtil.FormatLogByBuildSource(buildSourceName, successMessage, champion.Name);
+                string log = LoggerUtil.FormatLogByBuildSource(BuildSourceName, successMessage, champion.Name);
                 LogHandler(log);
 
                 return true;
@@ -111,7 +108,7 @@ namespace WhatBuild.Core
             {
                 Debug.WriteLine(e);
 
-                string errLog = LoggerUtil.FormatLogByBuildSource(buildSourceName, "Failed to download item set", champion.Name, e.Message);
+                string errLog = LoggerUtil.FormatLogByBuildSource(BuildSourceName, "Failed to download item set", champion.Name, e.Message);
                 LogHandler(errLog);
 
                 return false;
@@ -130,7 +127,7 @@ namespace WhatBuild.Core
                 throw new InvalidOperationException("Invalid content");
             }
 
-            LoLItemSetViewModel itemSetViewModel = ItemSetUtil.CreateItemSetPerChampion(buildSource, BuildSourceMetadata, champion, mode, Configuration.ShowSkillsOrder);
+            LoLItemSetViewModel itemSetViewModel = ItemSetUtil.CreateItemSetPerChampion(buildSource, champion, mode, Configuration.ShowSkillsOrder);
 
             if (itemSetViewModel == null)
             {
@@ -140,7 +137,7 @@ namespace WhatBuild.Core
             // Create Item set JSON file into LoL directory
             string itemSetDir = LoLPathUtil.CreateItemSetDirectory(Configuration.LoLDirectory, champion.Name);
 
-            string itemSetFileName = ItemSetUtil.GetFormattedItemSetFileName(buildSource, BuildSourceMetadata, mode, Configuration.ApplicationPrefixName);
+            string itemSetFileName = ItemSetUtil.GetFormattedItemSetFileName(buildSource, mode, Configuration.ApplicationPrefixName);
             string itemSetAbsolutePath = Path.Combine(itemSetDir, itemSetFileName);
 
             await FileUtil.CreateJsonFileAsync(itemSetAbsolutePath, itemSetViewModel, cancelToken);

@@ -8,16 +8,26 @@ using Xunit;
 
 namespace WhatBuild.Tests.BuildSources
 {
-    public class OPGGMetadataTest
+    public class OPGGTest
     {
         private readonly OPGG opggClient = new OPGG();
 
         [Fact]
+        public async Task GetVersion_Version_IsValid()
+        {
+            // Annie should be middle
+            await opggClient.InitAsync("annie");
+
+            string version = opggClient.GetVersion();
+            Assert.Matches(@"\d+.\d+", version);
+        }
+
+        [Fact]
         public async Task GetChampionPosition_ChampionPosition_IsValid()
         {
-            // Ahri should be middle
-            await opggClient.InitAsync("ahri");
-            Assert.True(opggClient.GetChampionPosition() == ChampionPosition.Mid);
+            // Annie should be middle
+            await opggClient.InitAsync("annie");
+            Assert.True(opggClient.GetChampionPosition() == ChampionPosition.Middle);
 
             // Try with another champion
             await opggClient.InitAsync("thresh");

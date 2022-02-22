@@ -13,7 +13,7 @@ namespace WhatBuild.Core.Utils
         {
             { ChampionPosition.Top, new List<string> { "top"} },
             { ChampionPosition.Jungle, new List<string> { "jungle", "jg"} },
-            { ChampionPosition.Mid, new List<string> { "mid", "middle"} },
+            { ChampionPosition.Middle, new List<string> { "mid", "middle"} },
             { ChampionPosition.Adc, new List<string> { "adc", "bottom"} },
             { ChampionPosition.Support, new List<string> { "support", "supp"} },
         };
