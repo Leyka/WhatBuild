@@ -1,10 +1,10 @@
 {
   "opgg": {
-    "version": "//div[@class='champion-stats-header-version']",
-    "championPosition": "//*[@class='champion-stats-position']/li",
-    "firstSkillsOrder": "//table[@class='champion-skill-build__table']/tbody/tr[2]/td",
-    "generalSkillsOrder": "//*[contains(@class, 'champion-stats__list__item tip')]/span",
-    "allItemCategories": "//table[@class='champion-overview__table']/tbody/tr",
-    "items": "td/ul/li[contains(@class, 'champion-stats__list__item')]/img/@src"
+    "version": "//div[@class='version']",
+    "championPosition": "//div[@class='inner_top']//div[@class='desc']",
+    "firstSkillsOrder": "//div[@class='skill_order_box']//tbody/tr[2]/td",
+    "generalSkillsOrder": "(//div[@class='icon_list'])[3]/ul/li",
+    "allItemCategories": "//table[2]/tbody/tr",
+    "items": "td//ul/li/img/@src"
   }
 }

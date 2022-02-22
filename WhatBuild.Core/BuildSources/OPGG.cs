@@ -53,8 +53,8 @@ namespace WhatBuild.Core.BuildSources
         {
             return mode switch
             {
-                LoLMode.Classic => $"https://www.op.gg/champion/{championName}",
-                LoLMode.ARAM => $"https://na.op.gg/aram/{championName}/statistics",
+                LoLMode.Classic => $"https://www.op.gg/champions/{championName}",
+                LoLMode.ARAM => $"https://na.op.gg/modes/aram/{championName}/build",
                 _ => throw new NotSupportedException()
             };
         }
