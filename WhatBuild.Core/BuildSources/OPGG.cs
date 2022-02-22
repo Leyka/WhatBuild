@@ -112,7 +112,7 @@ namespace WhatBuild.Core.BuildSources
                 throw new NullReferenceException("[OP.GG] Node position was not found");
             }
 
-            string position = nodePosition.Attributes["data-position"]?.Value;
+            string position = nodePosition.InnerText;
 
             return ChampionPositionUtil.Parse(position);
         }
