@@ -228,7 +228,7 @@ namespace WhatBuild.Core.BuildSources
             // Only unique ID will be added, therefore -> hashset
             HashSet<int> uniqueItemIds = new HashSet<int>();
 
-            HtmlNodeCollection allItemCategorieNodes = Document.DocumentNode.SelectNodes(Selector.AllItemCategories);
+            HtmlNodeCollection allItemCategorieNodes = Document.DocumentNode.SelectNodes(Selector.allItemsRows);
             for (int i = startIndexCategory; i < endIndexCategory; i++)
             {
                 HtmlNode itemCategory = allItemCategorieNodes[i];
@@ -269,7 +269,7 @@ namespace WhatBuild.Core.BuildSources
         private int[] GetRowsByItemCategory(ItemCategory category)
         {
             // This will get the th element; we can then extract the # of rows for each category from rowspan
-            HtmlNodeCollection nodes = Document.DocumentNode.SelectNodes(Selector.AllItemCategories);
+            HtmlNodeCollection nodes = Document.DocumentNode.SelectNodes(Selector.allItemsCategories);
 
             // get # of rows for each th
 
@@ -305,25 +305,9 @@ namespace WhatBuild.Core.BuildSources
             return new int[] { startPoint, numberOfRows };
         }
 
-        private int GetNextItemCategoryRowIndex(ItemCategory current)
-        {
-            int indexCurrent = ItemCategoriesDictionary.IndexOfKey(current);
-
-            // Check if last category item, returns the item categories size
-            bool isLastIndex = indexCurrent == ItemCategoriesDictionary.Count - 1;
-            if (isLastIndex)
-            {
-                return GetTotalItemCategories();
-            }
-
-            // Return next row index 
-            int nextCategoryRowIndex = ItemCategoriesDictionary.Values[indexCurrent + 1];
-            return nextCategoryRowIndex;
-        }
-
         private int GetTotalItemCategories()
         {
-            return Document.DocumentNode.SelectNodes(Selector.AllItemCategories).Count;
+            return Document.DocumentNode.SelectNodes(Selector.allItemsCategories).Count;
         }
 
         private int GetItemIdFromImageSrc(string imageSrc)
