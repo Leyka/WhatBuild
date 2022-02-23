@@ -252,9 +252,9 @@ namespace WhatBuild.Core.BuildSources
         {
             Dictionary<ItemCategory, int> itemCategories = new Dictionary<ItemCategory, int>
             {
-                { ItemCategory.Starter, GetRowIndexByItemCategory(ItemCategory.Starter) },
-                { ItemCategory.Boots, GetRowIndexByItemCategory(ItemCategory.Boots) },
-                { ItemCategory.Core, GetRowIndexByItemCategory(ItemCategory.Core) },
+                { ItemCategory.Starter, GetRowsByItemCategory(ItemCategory.Starter) },
+                { ItemCategory.Boots, GetRowsByItemCategory(ItemCategory.Boots) },
+                { ItemCategory.Core, GetRowsByItemCategory(ItemCategory.Core) },
             };
 
             var orderedItemCategories =
@@ -274,27 +274,43 @@ namespace WhatBuild.Core.BuildSources
         /// </summary>
         /// <param name="category">Category type</param>
         /// <returns>Index row</returns>
-        private int GetRowIndexByItemCategory(ItemCategory category)
+        private (int, int) GetRowsByItemCategory(ItemCategory category)
         {
+            // This will get the th element; we can then extract the # of rows for each category from rowspan
             HtmlNodeCollection nodes = Document.DocumentNode.SelectNodes(Selector.AllItemCategories);
 
-            // Set keyword to look for, depending on category
-            string keyword = category switch
-            {
-                ItemCategory.Starter => "starter",
-                ItemCategory.Boots => "boots",
-                ItemCategory.Core => "recommended",
-                ItemCategory.Extra => "recommended",
-                _ => throw new NotImplementedException(),
-            };
+            // get # of rows for each th
 
-            HtmlNode foundNode = nodes.FirstOrDefault(n => n.InnerText.ToLower().Contains(keyword));
-            if (foundNode == null)
+            List<int> rowsByCategory = new List<int>();
+
+            foreach (HtmlNode node in nodes)
             {
-                return -1;
+                rowsByCategory.Add(int.Parse(node.GetAttributeValue("rowspan", 0).ToString()));
             }
 
-            return nodes.IndexOf(foundNode);
+            // use switch to set first index
+
+            // Set keyword to look for, depending on category
+            int startPoint = -1;
+            int numberOfRows = -1;
+
+            switch (category)
+            {
+                case ItemCategory.Starter:
+                    startPoint = 0;
+                    numberOfRows = rowsByCategory[0];
+                    break;
+                case ItemCategory.Core:
+                    startPoint = rowsByCategory[0] - 1;
+                    numberOfRows = rowsByCategory[1];
+                    break;
+                case ItemCategory.Boots:
+                    startPoint = rowsByCategory[0] + rowsByCategory[1] - 1;
+                    numberOfRows = rowsByCategory[2];
+                    break;
+            };
+
+            return (startPoint, numberOfRows);
         }
 
         private int GetNextItemCategoryRowIndex(ItemCategory current)
