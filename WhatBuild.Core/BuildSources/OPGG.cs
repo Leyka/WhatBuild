@@ -280,11 +280,9 @@ namespace WhatBuild.Core.BuildSources
                 rowsByCategory.Add(int.Parse(node.GetAttributeValue("rowspan", 0).ToString()));
             }
 
-            // use switch to set first index
-
             // Set keyword to look for, depending on category
-            int startPoint = -1;
-            int numberOfRows = -1;
+            int startPoint = 0;
+            int numberOfRows = 0;
 
             switch (category)
             {
@@ -293,11 +291,11 @@ namespace WhatBuild.Core.BuildSources
                     numberOfRows = rowsByCategory[0];
                     break;
                 case ItemCategory.Core:
-                    startPoint = rowsByCategory[0] - 1;
+                    startPoint = rowsByCategory[0];
                     numberOfRows = rowsByCategory[1];
                     break;
                 case ItemCategory.Boots:
-                    startPoint = rowsByCategory[0] + rowsByCategory[1] - 1;
+                    startPoint = rowsByCategory[0] + rowsByCategory[1];
                     numberOfRows = rowsByCategory[2];
                     break;
             };
