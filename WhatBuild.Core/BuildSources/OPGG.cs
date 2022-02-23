@@ -24,8 +24,8 @@ namespace WhatBuild.Core.BuildSources
 
         private SelectorViewModel Selector { get; set; }
 
-        private SortedList<ItemCategory, int> _itemCategoryOrders;
-        private SortedList<ItemCategory, int> ItemCategoriesDictionary
+        private Dictionary<ItemCategory, int[]> _itemCategoryOrders;
+        private Dictionary<ItemCategory, int[]> ItemCategoriesDictionary
         {
             get
             {
@@ -209,8 +209,8 @@ namespace WhatBuild.Core.BuildSources
                 return null;
             }
 
-            int startIndex = ItemCategoriesDictionary[category];
-            int endIndex = GetNextItemCategoryRowIndex(category);
+            int startIndex = ItemCategoriesDictionary[category][0];
+            int endIndex = ItemCategoriesDictionary[category][0] + ItemCategoriesDictionary[category][1];
 
             return GetUniqueItemIds(startIndex, endIndex);
         }
@@ -248,25 +248,17 @@ namespace WhatBuild.Core.BuildSources
             return uniqueItemIds.ToList();
         }
 
-        private SortedList<ItemCategory, int> GetItemCategoriesOrdered()
+        private Dictionary<ItemCategory, int[]> GetItemCategoriesOrdered()
         {
-            Dictionary<ItemCategory, int> itemCategories = new Dictionary<ItemCategory, int>
+            Dictionary<ItemCategory, int[]> itemCategories = new Dictionary<ItemCategory, int[]>
             {
                 { ItemCategory.Starter, GetRowsByItemCategory(ItemCategory.Starter) },
-                { ItemCategory.Boots, GetRowsByItemCategory(ItemCategory.Boots) },
                 { ItemCategory.Core, GetRowsByItemCategory(ItemCategory.Core) },
+                { ItemCategory.Boots, GetRowsByItemCategory(ItemCategory.Boots) },
             };
 
-            var orderedItemCategories =
-                itemCategories
-                    .Where(x => x.Value >= 0) // Filter from Row index -1, which doesn't exist
-                    .ToDictionary(x => x.Key, x => x.Value);
-
             // Returns sorted list by RowIndex
-            return new SortedList<ItemCategory, int>(
-                orderedItemCategories,
-                Comparer<ItemCategory>.Create((k1, k2) => itemCategories[k1].CompareTo(itemCategories[k2]))
-            );
+            return itemCategories;
         }
 
         /// <summary>
@@ -274,7 +266,7 @@ namespace WhatBuild.Core.BuildSources
         /// </summary>
         /// <param name="category">Category type</param>
         /// <returns>Index row</returns>
-        private (int, int) GetRowsByItemCategory(ItemCategory category)
+        private int[] GetRowsByItemCategory(ItemCategory category)
         {
             // This will get the th element; we can then extract the # of rows for each category from rowspan
             HtmlNodeCollection nodes = Document.DocumentNode.SelectNodes(Selector.AllItemCategories);
@@ -310,7 +302,7 @@ namespace WhatBuild.Core.BuildSources
                     break;
             };
 
-            return (startPoint, numberOfRows);
+            return new int[] { startPoint, numberOfRows };
         }
 
         private int GetNextItemCategoryRowIndex(ItemCategory current)
