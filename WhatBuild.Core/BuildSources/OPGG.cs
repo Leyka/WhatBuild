@@ -11,6 +11,7 @@ using WhatBuild.Core.Utils;
 using WhatBuild.Core.ViewModels;
 using WhatBuild.Core.Stores;
 using System.Text.RegularExpressions;
+using SmartFormat;
 
 namespace WhatBuild.Core.BuildSources
 {
@@ -51,10 +52,13 @@ namespace WhatBuild.Core.BuildSources
 
         private string GetUrl(LoLMode mode, string championName)
         {
+            string classicLink = Selector.Links.Classic;
+            string aramLink = Selector.Links.ARAM;
+
             return mode switch
             {
-                LoLMode.Classic => $"https://www.op.gg/champion/{championName}",
-                LoLMode.ARAM => $"https://na.op.gg/aram/{championName}/statistics",
+                LoLMode.Classic => Smart.Format(classicLink, championName),
+                LoLMode.ARAM => Smart.Format(aramLink, championName),
                 _ => throw new NotSupportedException()
             };
         }

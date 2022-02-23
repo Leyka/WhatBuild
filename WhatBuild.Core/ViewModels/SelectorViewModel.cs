@@ -10,6 +10,9 @@ namespace WhatBuild.Core.ViewModels
     /// </summary>
     public class SelectorViewModel
     {
+        [JsonProperty("links")]
+        public LinksViewModel Links { get; set; }
+
         [JsonProperty("version")]
         public string Version { get; set; }
 
@@ -27,5 +30,14 @@ namespace WhatBuild.Core.ViewModels
 
         [JsonProperty("items")]
         public string Items { get; set; }
+    }
+
+    public class LinksViewModel
+    {
+        [JsonProperty("classic")]
+        public string Classic { get; set; }
+
+        [JsonProperty("aram")]
+        public string ARAM { get; set; }
     }
 }
