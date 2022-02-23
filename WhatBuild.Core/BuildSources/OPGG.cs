@@ -25,8 +25,8 @@ namespace WhatBuild.Core.BuildSources
 
         private SelectorViewModel Selector { get; set; }
 
-        private SortedList<ItemCategory, int> _itemCategoryOrders;
-        private SortedList<ItemCategory, int> ItemCategoriesDictionary
+        private Dictionary<ItemCategory, int[]> _itemCategoryOrders;
+        private Dictionary<ItemCategory, int[]> ItemCategoriesDictionary
         {
             get
             {
@@ -116,7 +116,7 @@ namespace WhatBuild.Core.BuildSources
                 throw new NullReferenceException("[OP.GG] Node position was not found");
             }
 
-            string position = nodePosition.Attributes["data-position"]?.Value;
+            string position = nodePosition.InnerText;
 
             return ChampionPositionUtil.Parse(position);
         }
@@ -213,8 +213,8 @@ namespace WhatBuild.Core.BuildSources
                 return null;
             }
 
-            int startIndex = ItemCategoriesDictionary[category];
-            int endIndex = GetNextItemCategoryRowIndex(category);
+            int startIndex = ItemCategoriesDictionary[category][0];
+            int endIndex = ItemCategoriesDictionary[category][0] + ItemCategoriesDictionary[category][1];
 
             return GetUniqueItemIds(startIndex, endIndex);
         }
@@ -232,7 +232,7 @@ namespace WhatBuild.Core.BuildSources
             // Only unique ID will be added, therefore -> hashset
             HashSet<int> uniqueItemIds = new HashSet<int>();
 
-            HtmlNodeCollection allItemCategorieNodes = Document.DocumentNode.SelectNodes(Selector.AllItemCategories);
+            HtmlNodeCollection allItemCategorieNodes = Document.DocumentNode.SelectNodes(Selector.allItemsRows);
             for (int i = startIndexCategory; i < endIndexCategory; i++)
             {
                 HtmlNode itemCategory = allItemCategorieNodes[i];
@@ -252,25 +252,17 @@ namespace WhatBuild.Core.BuildSources
             return uniqueItemIds.ToList();
         }
 
-        private SortedList<ItemCategory, int> GetItemCategoriesOrdered()
+        private Dictionary<ItemCategory, int[]> GetItemCategoriesOrdered()
         {
-            Dictionary<ItemCategory, int> itemCategories = new Dictionary<ItemCategory, int>
+            Dictionary<ItemCategory, int[]> itemCategories = new Dictionary<ItemCategory, int[]>
             {
-                { ItemCategory.Starter, GetRowIndexByItemCategory(ItemCategory.Starter) },
-                { ItemCategory.Boots, GetRowIndexByItemCategory(ItemCategory.Boots) },
-                { ItemCategory.Core, GetRowIndexByItemCategory(ItemCategory.Core) },
+                { ItemCategory.Starter, GetRowsByItemCategory(ItemCategory.Starter) },
+                { ItemCategory.Core, GetRowsByItemCategory(ItemCategory.Core) },
+                { ItemCategory.Boots, GetRowsByItemCategory(ItemCategory.Boots) },
             };
 
-            var orderedItemCategories =
-                itemCategories
-                    .Where(x => x.Value >= 0) // Filter from Row index -1, which doesn't exist
-                    .ToDictionary(x => x.Key, x => x.Value);
-
             // Returns sorted list by RowIndex
-            return new SortedList<ItemCategory, int>(
-                orderedItemCategories,
-                Comparer<ItemCategory>.Create((k1, k2) => itemCategories[k1].CompareTo(itemCategories[k2]))
-            );
+            return itemCategories;
         }
 
         /// <summary>
@@ -278,48 +270,55 @@ namespace WhatBuild.Core.BuildSources
         /// </summary>
         /// <param name="category">Category type</param>
         /// <returns>Index row</returns>
-        private int GetRowIndexByItemCategory(ItemCategory category)
+        private int[] GetRowsByItemCategory(ItemCategory category)
         {
-            HtmlNodeCollection nodes = Document.DocumentNode.SelectNodes(Selector.AllItemCategories);
+            // This will get the th element; we can then extract the # of rows for each category from rowspan
+            HtmlNodeCollection nodes = Document.DocumentNode.SelectNodes(Selector.allItemsCategories);
+
+            // get # of rows for each th
+
+            List<int> rowsByCategory = new List<int>();
+
+            foreach (HtmlNode node in nodes)
+            {
+                rowsByCategory.Add(int.Parse(node.GetAttributeValue("rowspan", 0).ToString()));
+            }
 
             // Set keyword to look for, depending on category
-            string keyword = category switch
-            {
-                ItemCategory.Starter => "starter",
-                ItemCategory.Boots => "boots",
-                ItemCategory.Core => "recommended",
-                ItemCategory.Extra => "recommended",
-                _ => throw new NotImplementedException(),
-            };
+            int startPoint = 0;
+            int numberOfRows = 0;
 
-            HtmlNode foundNode = nodes.FirstOrDefault(n => n.InnerText.ToLower().Contains(keyword));
-            if (foundNode == null)
+            // This is to catch Cassiopea with no boot option
+            try
             {
-                return -1;
+                switch (category)
+                {
+                    case ItemCategory.Starter:
+                        startPoint = 0;
+                        numberOfRows = rowsByCategory[0];
+                        break;
+                    case ItemCategory.Core:
+                        startPoint = rowsByCategory[0];
+                        numberOfRows = rowsByCategory[1];
+                        break;
+                    case ItemCategory.Boots:
+                        startPoint = rowsByCategory[0] + rowsByCategory[1];
+                        numberOfRows = rowsByCategory[2];
+                        break;
+                };
+            }
+            catch
+            {
+                // We ignore it
             }
 
-            return nodes.IndexOf(foundNode);
-        }
 
-        private int GetNextItemCategoryRowIndex(ItemCategory current)
-        {
-            int indexCurrent = ItemCategoriesDictionary.IndexOfKey(current);
-
-            // Check if last category item, returns the item categories size
-            bool isLastIndex = indexCurrent == ItemCategoriesDictionary.Count - 1;
-            if (isLastIndex)
-            {
-                return GetTotalItemCategories();
-            }
-
-            // Return next row index 
-            int nextCategoryRowIndex = ItemCategoriesDictionary.Values[indexCurrent + 1];
-            return nextCategoryRowIndex;
+            return new int[] { startPoint, numberOfRows };
         }
 
         private int GetTotalItemCategories()
         {
-            return Document.DocumentNode.SelectNodes(Selector.AllItemCategories).Count;
+            return Document.DocumentNode.SelectNodes(Selector.allItemsCategories).Count;
         }
 
         private int GetItemIdFromImageSrc(string imageSrc)
