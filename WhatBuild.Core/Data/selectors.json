@@ -6,6 +6,6 @@
     "generalSkillsOrder": "(//div[@class='icon_list'])[3]/ul/li",
     "allItemsCategories": "//table[2]/tbody/tr/th",
     "allItemsRows": "//table[2]/tbody/tr",
-    "items": "td//ul/li//img/@src"
+    "items": "td//ul/li/div[not(contains(@class, 'space'))]/img"
   }
 }

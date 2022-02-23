@@ -284,21 +284,30 @@ namespace WhatBuild.Core.BuildSources
             int startPoint = 0;
             int numberOfRows = 0;
 
-            switch (category)
+            // This is to catch Cassiopea with no boot option
+            try
             {
-                case ItemCategory.Starter:
-                    startPoint = 0;
-                    numberOfRows = rowsByCategory[0];
-                    break;
-                case ItemCategory.Core:
-                    startPoint = rowsByCategory[0];
-                    numberOfRows = rowsByCategory[1];
-                    break;
-                case ItemCategory.Boots:
-                    startPoint = rowsByCategory[0] + rowsByCategory[1];
-                    numberOfRows = rowsByCategory[2];
-                    break;
-            };
+                switch (category)
+                {
+                    case ItemCategory.Starter:
+                        startPoint = 0;
+                        numberOfRows = rowsByCategory[0];
+                        break;
+                    case ItemCategory.Core:
+                        startPoint = rowsByCategory[0];
+                        numberOfRows = rowsByCategory[1];
+                        break;
+                    case ItemCategory.Boots:
+                        startPoint = rowsByCategory[0] + rowsByCategory[1];
+                        numberOfRows = rowsByCategory[2];
+                        break;
+                };
+            }
+            catch
+            {
+                // We ignore it
+            }
+
 
             return new int[] { startPoint, numberOfRows };
         }
