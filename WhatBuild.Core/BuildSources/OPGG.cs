@@ -41,13 +41,14 @@ namespace WhatBuild.Core.BuildSources
 
         public async Task InitAsync(string championName, LoLMode mode = LoLMode.Classic)
         {
-            Task<HtmlDocument> fetchHtmlTask = FetchHtmlAsync(championName, mode);
             Task<SelectorViewModel> fetchSelectorTask = FetchSelectorDataAsync();
+            await Task.WhenAll(fetchSelectorTask);
+            Selector = fetchSelectorTask.Result;
 
-            await Task.WhenAll(fetchHtmlTask, fetchSelectorTask);
+            Task<HtmlDocument> fetchHtmlTask = FetchHtmlAsync(championName, mode);
+            await Task.WhenAll(fetchHtmlTask);
 
             Document = fetchHtmlTask.Result;
-            Selector = fetchSelectorTask.Result;
         }
 
         private string GetUrl(LoLMode mode, string championName)
@@ -57,8 +58,8 @@ namespace WhatBuild.Core.BuildSources
 
             return mode switch
             {
-                LoLMode.Classic => Smart.Format(classicLink, championName),
-                LoLMode.ARAM => Smart.Format(aramLink, championName),
+                LoLMode.Classic => String.Format(classicLink, championName),
+                LoLMode.ARAM => String.Format(aramLink, championName),
                 _ => throw new NotSupportedException()
             };
         }
