@@ -1,14 +1,15 @@
 {
   "opgg": {
     "links": {
-      "classic": "https://www.op.gg/champions/{championName}",
-      "aram": "https://na.op.gg/modes/aram/{championName}/build"
+      "classic": "https://www.op.gg/champions/{0}",
+      "aram": "https://na.op.gg/modes/aram/{0}/build"
     },
     "version": "//div[@class='version']",
-    "championPosition": "//div[@class='inner_top']//div[@class='desc']",
+    "championPosition": "(//div[@class='inner_top']//div[@class='desc'])[1]/span[@class='desc_text']",
     "firstSkillsOrder": "//div[@class='skill_order_box']//tbody/tr[2]/td",
     "generalSkillsOrder": "(//div[@class='icon_list'])[3]/ul/li",
-    "allItemCategories": "//table[2]/tbody/tr",
-    "items": "td//ul/li/img/@src"
+    "allItemsCategories": "//table[2]/tbody/tr/th",
+    "allItemsRows": "//table[2]/tbody/tr",
+    "items": "td//ul/li/div[not(contains(@class, 'space'))]/img"
   }
 }
