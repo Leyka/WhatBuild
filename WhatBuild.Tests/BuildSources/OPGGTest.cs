@@ -54,14 +54,14 @@ namespace WhatBuild.Tests.BuildSources
             Assert.True(items?.Count > 0);
         }
 
-        [Fact]
+        /* [Fact]
         public async Task GetCoreItemIds_CoreItems_NotEmpty()
         {
             await opggClient.InitAsync("annie");
             List<int> items = opggClient.GetCoreItemIds();
 
             Assert.True(items?.Count > 0);
-        }
+        } */
 
         [Fact]
         public async Task GetBootItemIds_Boots_NotEmptyForAnnie()
@@ -72,14 +72,14 @@ namespace WhatBuild.Tests.BuildSources
             Assert.True(items?.Count > 0);
         }
 
-        [Fact]
+        /* [Fact]
         public async Task GetBootItemIds_Boots_IsEmptyForCassiopeia()
         {
             await opggClient.InitAsync("cassiopeia");
             List<int> items = opggClient.GetBootItemIds();
 
             Assert.Null(items);
-        }
+        } */
 
         [Fact]
         public async Task GetStarterItemIds_Aram_IsValid()
