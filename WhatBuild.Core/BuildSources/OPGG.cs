@@ -11,7 +11,6 @@ using WhatBuild.Core.Utils;
 using WhatBuild.Core.ViewModels;
 using WhatBuild.Core.Stores;
 using System.Text.RegularExpressions;
-using SmartFormat;
 
 namespace WhatBuild.Core.BuildSources
 {
