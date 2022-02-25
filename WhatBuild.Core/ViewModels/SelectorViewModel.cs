@@ -26,10 +26,10 @@ namespace WhatBuild.Core.ViewModels
         public string GeneralSkillsOrder { get; set; }
 
         [JsonProperty("allItemsCategories")]
-        public string allItemsCategories { get; set; }
+        public string AllItemsCategories { get; set; }
 
         [JsonProperty("allItemsRows")]
-        public string allItemsRows { get; set; }
+        public string AllItemsRows { get; set; }
 
         [JsonProperty("items")]
         public string Items { get; set; }

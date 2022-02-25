@@ -51,17 +51,17 @@ namespace WhatBuild.Tests.BuildSources
             await opggClient.InitAsync("annie");
             List<int> items = opggClient.GetStarterItemIds();
 
-            Assert.True(items?.Count > 0);
+            Assert.NotEmpty(items);
         }
 
-        /* [Fact]
+        [Fact]
         public async Task GetCoreItemIds_CoreItems_NotEmpty()
         {
             await opggClient.InitAsync("annie");
             List<int> items = opggClient.GetCoreItemIds();
 
-            Assert.True(items?.Count > 0);
-        } */
+            Assert.NotEmpty(items);
+        }
 
         [Fact]
         public async Task GetBootItemIds_Boots_NotEmptyForAnnie()
@@ -69,17 +69,17 @@ namespace WhatBuild.Tests.BuildSources
             await opggClient.InitAsync("annie");
             List<int> items = opggClient.GetBootItemIds();
 
-            Assert.True(items?.Count > 0);
+            Assert.NotEmpty(items);
         }
 
-        /* [Fact]
+        [Fact]
         public async Task GetBootItemIds_Boots_IsEmptyForCassiopeia()
         {
             await opggClient.InitAsync("cassiopeia");
             List<int> items = opggClient.GetBootItemIds();
 
-            Assert.Null(items);
-        } */
+            Assert.Empty(items);
+        }
 
         [Fact]
         public async Task GetStarterItemIds_Aram_IsValid()
@@ -87,7 +87,7 @@ namespace WhatBuild.Tests.BuildSources
             await opggClient.InitAsync("annie", LoLMode.ARAM);
             List<int> items = opggClient.GetStarterItemIds();
 
-            Assert.True(items?.Count > 0);
+            Assert.NotEmpty(items);
         }
     }
 }

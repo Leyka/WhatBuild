@@ -24,8 +24,9 @@ namespace WhatBuild.Core.BuildSources
 
         private SelectorViewModel Selector { get; set; }
 
-        private Dictionary<ItemCategory, int[]> _itemCategoryOrders;
-        private Dictionary<ItemCategory, int[]> ItemCategoriesDictionary
+        private Dictionary<ItemCategory, (int, int)> _itemCategoryOrders;
+
+        private Dictionary<ItemCategory, (int, int)> ItemCategoriesDictionary
         {
             get
             {
@@ -205,6 +206,8 @@ namespace WhatBuild.Core.BuildSources
             return GetExtraItemIds()?.Count > 0;
         }
 
+        #endregion
+
         #region Helpers
         private List<int> GetItemsIdsByCategory(ItemCategory category)
         {
@@ -213,8 +216,9 @@ namespace WhatBuild.Core.BuildSources
                 return null;
             }
 
-            int startIndex = ItemCategoriesDictionary[category][0];
-            int endIndex = ItemCategoriesDictionary[category][0] + ItemCategoriesDictionary[category][1];
+            (int startIndex, int countRows) = ItemCategoriesDictionary[category];
+
+            int endIndex = startIndex + countRows;
 
             return GetUniqueItemIds(startIndex, endIndex);
         }
@@ -232,7 +236,7 @@ namespace WhatBuild.Core.BuildSources
             // Only unique ID will be added, therefore -> hashset
             HashSet<int> uniqueItemIds = new HashSet<int>();
 
-            HtmlNodeCollection allItemCategorieNodes = Document.DocumentNode.SelectNodes(Selector.allItemsRows);
+            HtmlNodeCollection allItemCategorieNodes = Document.DocumentNode.SelectNodes(Selector.AllItemsRows);
             for (int i = startIndexCategory; i < endIndexCategory; i++)
             {
                 HtmlNode itemCategory = allItemCategorieNodes[i];
@@ -252,9 +256,14 @@ namespace WhatBuild.Core.BuildSources
             return uniqueItemIds.ToList();
         }
 
-        private Dictionary<ItemCategory, int[]> GetItemCategoriesOrdered()
+        /// <summary>
+        /// Returns a dictionary of each section with their (Start row number, Count row number) section in OP.GG website
+        /// Ex. Starter section starts at index 0 and contains 3 rows then Core starts at index 2 and contains 4 rows etc.
+        /// </summary>
+        /// <returns></returns>
+        private Dictionary<ItemCategory, (int, int)> GetItemCategoriesOrdered()
         {
-            Dictionary<ItemCategory, int[]> itemCategories = new Dictionary<ItemCategory, int[]>
+            var itemCategories = new Dictionary<ItemCategory, (int, int)>
             {
                 { ItemCategory.Starter, GetRowsByItemCategory(ItemCategory.Starter) },
                 { ItemCategory.Core, GetRowsByItemCategory(ItemCategory.Core) },
@@ -270,10 +279,10 @@ namespace WhatBuild.Core.BuildSources
         /// </summary>
         /// <param name="category">Category type</param>
         /// <returns>Index row</returns>
-        private int[] GetRowsByItemCategory(ItemCategory category)
+        private (int, int) GetRowsByItemCategory(ItemCategory category)
         {
             // This will get the th element; we can then extract the # of rows for each category from rowspan
-            HtmlNodeCollection nodes = Document.DocumentNode.SelectNodes(Selector.allItemsCategories);
+            HtmlNodeCollection nodes = Document.DocumentNode.SelectNodes(Selector.AllItemsCategories);
 
             // get # of rows for each th
 
@@ -281,44 +290,19 @@ namespace WhatBuild.Core.BuildSources
 
             foreach (HtmlNode node in nodes)
             {
-                rowsByCategory.Add(int.Parse(node.GetAttributeValue("rowspan", 0).ToString()));
+                int nbOfRows = node.GetAttributeValue<int>("rowspan", 0);
+                rowsByCategory.Add(nbOfRows);
             }
 
-            // Set keyword to look for, depending on category
-            int startPoint = 0;
-            int numberOfRows = 0;
-
-            // This is to catch Cassiopea with no boot option
-            try
+            (int startRowIndex, int countRows) = category switch
             {
-                switch (category)
-                {
-                    case ItemCategory.Starter:
-                        startPoint = 0;
-                        numberOfRows = rowsByCategory[0];
-                        break;
-                    case ItemCategory.Core:
-                        startPoint = rowsByCategory[0];
-                        numberOfRows = rowsByCategory[1];
-                        break;
-                    case ItemCategory.Boots:
-                        startPoint = rowsByCategory[0] + rowsByCategory[1];
-                        numberOfRows = rowsByCategory[2];
-                        break;
-                };
-            }
-            catch
-            {
-                // We ignore it
-            }
+                ItemCategory.Starter => (0, rowsByCategory[0]),
+                ItemCategory.Core => (rowsByCategory[0], rowsByCategory[1]),
+                ItemCategory.Boots when nodes.Count > 2 => (rowsByCategory[0] + rowsByCategory[1], rowsByCategory[2]),
+                _ => (0, 0)
+            };
 
-
-            return new int[] { startPoint, numberOfRows };
-        }
-
-        private int GetTotalItemCategories()
-        {
-            return Document.DocumentNode.SelectNodes(Selector.allItemsCategories).Count;
+            return (startRowIndex, countRows);
         }
 
         private int GetItemIdFromImageSrc(string imageSrc)
@@ -334,6 +318,5 @@ namespace WhatBuild.Core.BuildSources
 
         #endregion
 
-        #endregion
     }
 }
