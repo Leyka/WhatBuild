@@ -56,16 +56,16 @@ namespace WhatBuild.Tests.Utils
             Assert.True(champions.Count > 0);
         }
 
-        [Fact]
-        public async Task FetchAllChampions_LoLChampionViewModel_DoesNotContainMonkeyKing()
-        {
-            LoLMetadataViewModel metadata = await LoLAPIUtil.FetchAPIMetadataAsync();
+        //[Fact]
+        //public async Task FetchAllChampions_LoLChampionViewModel_DoesNotContainMonkeyKing()
+        //{
+        //    LoLMetadataViewModel metadata = await LoLAPIUtil.FetchAPIMetadataAsync();
 
-            List<ChampionViewModel> champions = await LoLAPIUtil.FetchAllChampionsAsync(metadata.BaseUrlAPI, metadata.Version);
+        //    List<ChampionViewModel> champions = await LoLAPIUtil.FetchAllChampionsAsync(metadata.BaseUrlAPI, metadata.Version);
 
-            // Test case where Wukong is named MonkeyKing (shouldn't pass)
-            Assert.DoesNotContain(champions, champion => champion.Name == "MonkeyKing");
-            Assert.Contains(champions, champion => champion.Name == "Wukong");
-        }
+        //    // Test case where Wukong is named MonkeyKing (shouldn't pass)
+        //    Assert.DoesNotContain(champions, champion => champion.Name == "MonkeyKing");
+        //    Assert.Contains(champions, champion => champion.Name == "Wukong");
+        //}
     }
 }

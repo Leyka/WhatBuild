@@ -79,7 +79,9 @@ namespace WhatBuild.Core.Utils
 
             // Some champions (like Wukong named MonkeyKing) are known to have alias, fix them with their normal name
             // So "MonkeyKing" becomes "Wukong"
-            PostFixChampionNames(champions);
+
+            // FIXME: I'm commenting it for now, OP.GG (the only build source we're using) has decided to come back to "MonkeyKing" for "Wukong"
+            // PostFixChampionNames(champions);
 
             return champions;
         }
