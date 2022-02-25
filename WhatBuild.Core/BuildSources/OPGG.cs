@@ -40,21 +40,25 @@ namespace WhatBuild.Core.BuildSources
 
         public async Task InitAsync(string championName, LoLMode mode = LoLMode.Classic)
         {
-            Task<HtmlDocument> fetchHtmlTask = FetchHtmlAsync(championName, mode);
             Task<SelectorViewModel> fetchSelectorTask = FetchSelectorDataAsync();
+            await Task.WhenAll(fetchSelectorTask);
+            Selector = fetchSelectorTask.Result;
 
-            await Task.WhenAll(fetchHtmlTask, fetchSelectorTask);
+            Task<HtmlDocument> fetchHtmlTask = FetchHtmlAsync(championName, mode);
+            await Task.WhenAll(fetchHtmlTask);
 
             Document = fetchHtmlTask.Result;
-            Selector = fetchSelectorTask.Result;
         }
 
         private string GetUrl(LoLMode mode, string championName)
         {
+            string classicLink = Selector.Links.Classic;
+            string aramLink = Selector.Links.ARAM;
+
             return mode switch
             {
-                LoLMode.Classic => $"https://www.op.gg/champions/{championName}",
-                LoLMode.ARAM => $"https://na.op.gg/modes/aram/{championName}/build",
+                LoLMode.Classic => String.Format(classicLink, championName),
+                LoLMode.ARAM => String.Format(aramLink, championName),
                 _ => throw new NotSupportedException()
             };
         }
